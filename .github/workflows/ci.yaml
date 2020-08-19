@@ -1,0 +1,52 @@
+name: CI
+
+on: [push]
+
+jobs: jobs:
+  check-code:
+    name: Check code
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@master
+      - name: Setup python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+          architecture: x64
+      - name: Install dependencies
+        run: |
+          sudo apt-get install clang-format cppcheck
+          pip install pre-commit==2.6.0 cpplint==1.5.4
+      - name: Check code quality
+        run: make check
+  test-linux:
+    runs-on: ubuntu-20.04
+    name: Test on Linux
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@master
+      - name: Build and run tests
+        run: |
+          docker run --rm dockbuild/centos5:latest > ./dockbuild
+          chmod +x ./dockbuild
+          ./dockbuild bash -c "make test"
+  test-macos:
+    runs-on: macos-10.15
+    name: Test on MacOS
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@master
+      - name: Build and run tests
+        run: make test
+  test-windows:
+    runs-on: windows-2019
+    name: Test on Windows
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@master
+      - name: Build and run tests
+        run: |
+          docker run --rm dockcross/windows-static-x64:20200806-2b8f043 > ./dockcross
+          chmod +x ./dockcross
+          ./dockcross bash -c "sudo ln -s /usr/bin/make /usr/bin/gmake && make test"
