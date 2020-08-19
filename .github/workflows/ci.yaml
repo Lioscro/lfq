@@ -40,7 +40,7 @@ jobs:
       - name: Build and run tests
         run: make test
   test-windows:
-    runs-on: windows-2019
+    runs-on: ubuntu-20.04
     name: Test on Windows
     steps:
       - name: Checkout branch
