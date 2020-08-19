@@ -39,9 +39,8 @@ TEST(SequenceTest, test_decode) {
   std::vector<uint8_t> sequence{47, 70, 241};
   Sequence s(sequence, 8);
   std::string str("ACTGCCTA");
-  uint8_t* decoded = s.decode();
-  EXPECT_STREQ(str.c_str(), reinterpret_cast<char*>(decoded));
-  delete[] decoded;
+  std::string decoded = s.decode();
+  EXPECT_EQ(str, decoded);
 }
 
 TEST(SequenceTest, test_to_chunk) {

@@ -17,7 +17,7 @@ Sequence::Sequence(const std::vector<uint8_t>& sequence, size_t n_bases)
 Sequence::Sequence(const uint8_t* sequence, size_t size, size_t n_bases)
     : sequence(sequence, sequence + size), n_bases(n_bases) {}
 
-const std::vector<uint8_t>& Sequence::get_sequence() const {
+const std::vector<uint8_t> Sequence::get_sequence() const {
   return this->sequence;
 }
 
@@ -93,13 +93,13 @@ Sequence* Sequence::encode(const char* str, size_t n_bases) {
   return s;
 }
 
-uint8_t* Sequence::decode() const {
+std::string Sequence::decode() const {
   char base = 0;
   uint8_t encoded = 0;
   int8_t overflow = 0;
   size_t bit_i = 0;
   size_t vector_i = 0;
-  uint8_t* decoded = new uint8_t[this->n_bases]();
+  std::string decoded = "";
 
   for (size_t i = 0; i < this->n_bases; i++) {
     bit_i = i * this->BLOCK_SIZE;
@@ -115,7 +115,7 @@ uint8_t* Sequence::decode() const {
       // The base is in one vector element.
       encoded = (this->sequence[vector_i] >> -overflow) & this->MASK;
     }
-    decoded[i] = this->encoding_to_char(encoded);
+    decoded += this->encoding_to_char(encoded);
   }
 
   return decoded;

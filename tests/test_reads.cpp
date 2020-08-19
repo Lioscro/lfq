@@ -10,7 +10,6 @@ TEST(ReadsTest, test_read_sequence_chunk) {
   Reads r(filename, Mode::Read);
   Sequence* s = r.read_sequence_chunk();
   std::string str("ACTGCCTA");
-  uint8_t* decoded = s->decode();
-  EXPECT_STREQ(str.c_str(), reinterpret_cast<char*>(decoded));
-  delete[] decoded;
+  std::string decoded = s->decode();
+  EXPECT_EQ(str, decoded);
 }

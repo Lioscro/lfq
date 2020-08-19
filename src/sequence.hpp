@@ -33,7 +33,7 @@ class Sequence {
   Sequence(const uint8_t* sequence, size_t size, size_t n_bases);
 
   /* Accessors */
-  const std::vector<uint8_t>& get_sequence() const;
+  const std::vector<uint8_t> get_sequence() const;
   size_t get_n_bases() const;
 
   /* Static "constructor" methods that creates a Sequence object with the
@@ -44,7 +44,7 @@ class Sequence {
   uint8_t* to_chunk(uint8_t n_bases_bytes, size_t* size) const;
 
   /* Decode the encoded sequence held by this object. */
-  uint8_t* decode() const;
+  std::string decode() const;
 };
 
 #endif  // SRC_SEQUENCE_HPP_
