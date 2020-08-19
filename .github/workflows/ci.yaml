@@ -47,6 +47,6 @@ jobs:
         uses: actions/checkout@master
       - name: Build and run tests
         run: |
-          docker run --rm dockcross/windows-static-x64:20200806-2b8f043 > ./dockcross
+          docker run --rm dockcross/windows-static-x64:20200609-7fa7213 > ./dockcross
           chmod +x ./dockcross
           ./dockcross bash -c "sudo ln -s /usr/bin/make /usr/bin/gmake && make test"
