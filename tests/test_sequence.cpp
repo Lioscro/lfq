@@ -40,7 +40,7 @@ TEST(SequenceTest, test_decode) {
   Sequence s(sequence, 8);
   std::string str("ACTGCCTA");
   uint8_t* decoded = s.decode();
-  EXPECT_STREQ(str.c_str(), (char*)decoded);
+  EXPECT_STREQ(str.c_str(), reinterpret_cast<char*>(decoded));
   delete[] decoded;
 }
 

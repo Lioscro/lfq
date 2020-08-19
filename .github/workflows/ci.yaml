@@ -44,8 +44,10 @@ jobs:
         uses: actions/checkout@master
       - name: Build and run tests
         run: |
-          cmake . -G "MinGW Makefiles" -DTest=ON
-          make test
+          mkdir build
+          cd build
+          cmake .. -G "MinGW Makefiles" -DTest=ON
+          make
           tests/test.exe
   # test-linux:
   #   runs-on: ubuntu-20.04
