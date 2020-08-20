@@ -1,6 +1,7 @@
 #ifndef SRC_SEQUENCE_HPP_
 #define SRC_SEQUENCE_HPP_
 #include <cmath>
+#include <iostream>
 #include <string>
 #include <vector>
 
