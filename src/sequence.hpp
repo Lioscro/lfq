@@ -6,9 +6,7 @@
 
 class Sequence {
  private:
-  /* Static constants related to block size and base encodings. */
-  static const size_t BLOCK_SIZE;
-  static const size_t TYPE_SIZE;
+  /* Static constants related base encodings. */
   static const uint8_t MASK;
   static const uint8_t BASE_N;
   static const uint8_t BASE_A;
@@ -28,6 +26,10 @@ class Sequence {
   static char encoding_to_char(const uint8_t e);
 
  public:
+  /* Other static constants, but these can be accessed from other classes. */
+  static const size_t BLOCK_SIZE;
+  static const size_t TYPE_SIZE;
+
   /* Constructors. */
   Sequence(const std::vector<uint8_t>& sequence, size_t n_bases);
   Sequence(const uint8_t* sequence, size_t size, size_t n_bases);
@@ -35,6 +37,7 @@ class Sequence {
   /* Accessors */
   const std::vector<uint8_t> get_sequence() const;
   size_t get_n_bases() const;
+  static size_t get_type_size();
 
   /* Static "constructor" methods that creates a Sequence object with the
    * provided string/char array encoded.

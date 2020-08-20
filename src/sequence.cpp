@@ -72,7 +72,7 @@ Sequence* Sequence::encode(const char* str, size_t n_bases) {
 
   for (size_t i = 0; i < n_bases; i++) {
     bit_i = i * s->BLOCK_SIZE;
-    vector_i = bit_i / 8;
+    vector_i = bit_i / s->TYPE_SIZE;
 
     // Convert base character to 3-bit encoding.
     base = s->char_to_encoding(str[i]);
@@ -124,9 +124,10 @@ std::string Sequence::decode() const {
 uint8_t* Sequence::to_chunk(uint8_t n_bases_bytes, size_t* size) const {
   // Make sure n_bases_bytes can hold n_bases.
   if (this->n_bases > pow(2, n_bases_bytes * this->TYPE_SIZE) - 1) {
-    throw std::string("Can not encode ") + std::to_string(this->n_bases) +
+    throw std::runtime_error(
+        std::string("Can not encode ") + std::to_string(this->n_bases) +
         std::string(" in ") + std::to_string(n_bases_bytes) +
-        std::string(" bytes");
+        std::string(" bytes"));
   }
 
   *size = n_bases_bytes + this->sequence.size();
