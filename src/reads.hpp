@@ -40,8 +40,8 @@ class Reads {
   char* read_sequence(size_t vector_size);
 
  public:
-  static const std::string EXTENSION;
-  static const std::string INDEX_EXTENSION;
+  static const char EXTENSION[];
+  static const char INDEX_EXTENSION[];
 
   Reads(const std::string& filename, Mode mode);
   ~Reads();
