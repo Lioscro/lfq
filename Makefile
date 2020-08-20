@@ -1,4 +1,4 @@
-.PHONY: build check clean cmake test
+.PHONY: build check clean test
 
 build:
 	mkdir -p build && cd build && cmake .. && make
@@ -10,4 +10,4 @@ clean:
 	rm -rf build
 
 test:
-	mkdir -p build && cd build && cmake .. -DTest=ON && make test && tests/test
+	mkdir -p build && cd build && cmake .. -DTest=ON && make && tests/test

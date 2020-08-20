@@ -1,12 +1,13 @@
 #ifndef SRC_SEQUENCE_HPP_
 #define SRC_SEQUENCE_HPP_
 #include <cmath>
+#include <iostream>
 #include <string>
 #include <vector>
 
-struct Sequence {
-  /* Static constants related to block size and base encodings. */
-  static const size_t BLOCK_SIZE;
+class Sequence {
+ private:
+  /* Static constants related base encodings. */
   static const uint8_t MASK;
   static const uint8_t BASE_N;
   static const uint8_t BASE_A;
@@ -18,23 +19,36 @@ struct Sequence {
   std::vector<uint8_t> sequence;
   size_t n_bases;
 
-  /* Constructors. */
+  /* Private empty constructor. */
   Sequence();
-  Sequence(const std::vector<uint8_t>& sequence, size_t n_bases);
-  Sequence(const uint8_t* sequence, size_t size, size_t n_bases);
 
   /* Static methods to convert a char to its encoding and vice-versa. */
   static uint8_t char_to_encoding(const char c);
   static char encoding_to_char(const uint8_t e);
 
+ public:
+  /* Other static constants, but these can be accessed from other classes. */
+  static const size_t BLOCK_SIZE;
+  static const size_t TYPE_SIZE;
+
+  /* Constructors. */
+  Sequence(const std::vector<uint8_t>& sequence, size_t n_bases);
+  Sequence(const uint8_t* sequence, size_t size, size_t n_bases);
+
+  /* Accessors */
+  const std::vector<uint8_t> get_sequence() const;
+  size_t get_n_bases() const;
+  static size_t get_type_size();
+
   /* Static "constructor" methods that creates a Sequence object with the
    * provided string/char array encoded.
    */
-  static Sequence& encode(const std::string& str);
-  static Sequence& encode(const char* str, size_t size);
+  static Sequence* encode(const std::string& str);
+  static Sequence* encode(const char* str, size_t n_bases);
+  uint8_t* to_chunk(uint8_t n_bases_bytes, size_t* size) const;
 
   /* Decode the encoded sequence held by this object. */
-  char* decode();
+  std::string decode() const;
 };
 
 #endif  // SRC_SEQUENCE_HPP_
