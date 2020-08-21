@@ -2,6 +2,7 @@
 #define SRC_SEQUENCE_HPP_
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
