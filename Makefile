@@ -18,6 +18,7 @@ build-windows:
 compile-release:
 	mkdir -p release/lfq
 	cp -rf build/src/lfq release/lfq/
+	cp -rf tests/fixtures/fastq/example.fastq release/lfq/
 	cp -rf LICENSE release/lfq/
 	cp -rf README.md release/lfq/
 	cd release && \
@@ -26,6 +27,7 @@ compile-release:
 compile-release-windows:
 	mkdir -p release/lfq
 	cp -rf build/src/lfq.exe release/lfq/
+		cp -rf tests/fixtures/fastq/example.fastq release/lfq/
 	cp -rf LICENSE release/lfq/
 	cp -rf README.md release/lfq/
 	cd release \
@@ -44,7 +46,7 @@ test:
 	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
 	make && \
 	tests/test && \
-	../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/test.fastq
+	../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/example.fastq
 
 test-windows:
 	mkdir build && \
@@ -52,4 +54,4 @@ test-windows:
 	cmake .. -G "MinGW Makefiles" -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
 	make && \
 	tests/test.exe && \
-	python ../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/test.fastq
+	python ../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/example.fastq
