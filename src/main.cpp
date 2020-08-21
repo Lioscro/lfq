@@ -37,6 +37,8 @@ void print_encode_usage(const std::string& exe) {
       << std::endl
       << "Options:" << std::endl
       << "-o, --output    (required) File for LFQ output" << std::endl
+      << "-h, --header    File for read headers" << std::endl
+      << "-q, --qual      File for quality sequences" << std::endl
       << "-i, --index     File for index output" << std::endl
       << std::endl;
   exit(1);
@@ -51,6 +53,36 @@ void print_decode_usage(const std::string& exe) {
             << "Options:" << std::endl
             << "-o, --output    File for FASTQ output. Defaults to stdout."
             << std::endl
+            << "-h, --header    File from which to read headers" << std::endl
+            << "-q, --qual      File from which to read quality sequences"
+            << std::endl
+            << std::endl;
+  exit(1);
+}
+
+void print_index_usage(const std::string& exe) {
+  std::cerr << "Usage: " << exe << " index [options] lfq-file" << std::endl
+            << std::endl
+            << "Positional arguments:" << std::endl
+            << "lfq-file        Input LFQ file." << std::endl
+            << std::endl
+            << "Options:" << std::endl
+            << "-o, --output    (required) File for index output." << std::endl
+            << std::endl
+            << std::endl;
+  exit(1);
+}
+
+void print_view_usage(const std::string& exe) {
+  std::cerr << "Usage: " << exe << " view [options] lfq-file" << std::endl
+            << std::endl
+            << "Positional arguments:" << std::endl
+            << "lfq-file        Input LFQ file." << std::endl
+            << std::endl
+            << "Options:" << std::endl
+            << "-n, --num       (required) Which read to extract" << std::endl
+            << "-i, --index     Index file. Recommended for fast lookup"
+            << std::endl
             << std::endl;
   exit(1);
 }
@@ -60,6 +92,10 @@ void print_command_usage(const std::string& exe, const std::string& cmd) {
     print_encode_usage(exe);
   } else if (cmd == "decode") {
     print_decode_usage(exe);
+  } else if (cmd == "index") {
+    print_index_usage(exe);
+  } else if (cmd == "view") {
+    print_view_usage(exe);
   } else {
     print_usage(exe);
   }
@@ -121,8 +157,16 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
   std::string in_path(args[0]);
   std::string out_path(opts.at('o'));
   std::string index_path("");
+  std::string header_path("");
+  std::string qual_path("");
   if (opts.find('i') != opts.end()) {
     index_path = opts.at('i');
+  }
+  if (opts.find('h') != opts.end()) {
+    header_path = opts.at('h');
+  }
+  if (opts.find('q') != opts.end()) {
+    qual_path = opts.at('q');
   }
 
   Reads reads(out_path, Mode::Write);
@@ -167,8 +211,16 @@ void parse_decode(const std::string& exe, const std::vector<std::string>& args,
   }
   std::string in_path(args[0]);
   std::string out_path("");
+  std::string header_path("");
+  std::string qual_path("");
   if (opts.find('o') != opts.end()) {
     out_path = opts.at('o');
+  }
+  if (opts.find('h') != opts.end()) {
+    header_path = opts.at('h');
+  }
+  if (opts.find('q') != opts.end()) {
+    qual_path = opts.at('q');
   }
 
   Reads reads(in_path, Mode::Read);
@@ -195,6 +247,53 @@ void parse_decode(const std::string& exe, const std::vector<std::string>& args,
   }
 }
 
+void parse_index(const std::string& exe, const std::vector<std::string>& args,
+                 const std::map<char, std::string>& opts) {
+  // There must be exactly one argument specifying the input LFQ.
+  if (args.size() != 1) {
+    std::cerr << "Error: missing input file" << std::endl;
+    print_encode_usage(exe);
+  }
+  // o option must be provided.
+  if (opts.find('o') == opts.end() || opts.at('o').empty()) {
+    std::cerr << "Error: missing output file" << std::endl;
+    print_encode_usage(exe);
+  }
+  std::string in_path(args[0]);
+  std::string out_path(opts.at('o'));
+  Reads reads(in_path, Mode::Read);
+  reads.build_index();
+  reads.write_index(out_path);
+}
+
+void parse_view(const std::string& exe, const std::vector<std::string>& args,
+                const std::map<char, std::string>& opts) {
+  // There must be exactly one argument specifying the input LFQ.
+  if (args.size() != 1) {
+    std::cerr << "Error: missing input file" << std::endl;
+    print_encode_usage(exe);
+  }
+  // n option must be provided.
+  if (opts.find('n') == opts.end() || opts.at('n').empty()) {
+    std::cerr << "Error: missing read number" << std::endl;
+    print_encode_usage(exe);
+  }
+  std::string in_path(args[0]);
+  size_t n = stoul(opts.at('n'));
+  std::string index_path("");
+  if (opts.find('i') != opts.end()) {
+    index_path = opts.at('i');
+  }
+  Reads reads(in_path, Mode::Read);
+  if (!index_path.empty()) {
+    reads.read_index(index_path);
+  }
+  reads.seek(n);
+  Sequence* s = reads.read_sequence_chunk();
+  std::cout << s->decode() << std::endl;
+  delete s;
+}
+
 int main(int argc, char* argv[]) {
   std::string exe(argv[0]);
 
@@ -217,5 +316,9 @@ int main(int argc, char* argv[]) {
     parse_encode(exe, args, opts);
   } else if (cmd == "decode") {
     parse_decode(exe, args, opts);
+  } else if (cmd == "index") {
+    parse_index(exe, args, opts);
+  } else if (cmd == "view") {
+    parse_view(exe, args, opts);
   }
 }
