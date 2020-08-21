@@ -1,26 +1,221 @@
 #include <iostream>
+#include <map>
+#include <string>
+#include <vector>
 
 #include "reads.hpp"
 #include "sequence.hpp"
 
+static const char VERSION[] = "0.0.1";
+
+void print_usage(const std::string& exe) {
+  std::cerr << "lfq " << VERSION << std::endl
+            << std::endl
+            << "Usage: " << exe << " <CMD> [arguments] .." << std::endl
+            << std::endl
+            << "    encode    Encode a set of FASTQ sequences to LFQ"
+            << std::endl
+            << "    decode    Decode a LFQ to FASTQ" << std::endl
+            << "    index     Generate an index file for fast seeking of LFQ"
+            << std::endl
+            << "    view      View one or more sequences in a LFQ" << std::endl
+            << std::endl
+            << "Running lfq <CMD> without arguments prints usage information "
+               "for <CMD>"
+            << std::endl
+            << std::endl;
+  exit(1);
+}
+
+void print_encode_usage(const std::string& exe) {
+  std::cerr
+      << "Usage: " << exe << " encode [options] fastq-file" << std::endl
+      << std::endl
+      << "Positional arguments:" << std::endl
+      << "fastq-file      Input FASTQ file. Use a dash '-' to read from stdin."
+      << std::endl
+      << std::endl
+      << "Options:" << std::endl
+      << "-o, --output    (required) File for LFQ output" << std::endl
+      << "-i, --index     File for index output" << std::endl
+      << std::endl;
+  exit(1);
+}
+
+void print_decode_usage(const std::string& exe) {
+  std::cerr << "Usage: " << exe << " decode [options] lfq-file" << std::endl
+            << std::endl
+            << "Positional arguments:" << std::endl
+            << "lfq-file        Input LFQ file." << std::endl
+            << std::endl
+            << "Options:" << std::endl
+            << "-o, --output    File for FASTQ output. Defaults to stdout."
+            << std::endl
+            << std::endl;
+  exit(1);
+}
+
+void print_command_usage(const std::string& exe, const std::string& cmd) {
+  if (cmd == "encode") {
+    print_encode_usage(exe);
+  } else if (cmd == "decode") {
+    print_decode_usage(exe);
+  } else {
+    print_usage(exe);
+  }
+}
+
+void parse_command(const std::string& exe, const std::string& cmd, int argc,
+                   char* argv[], std::vector<std::string>* args,
+                   std::map<char, std::string>* opts) {
+  for (int i = 0; i < argc; i++) {
+    std::string part(argv[i]);
+
+    // Options start with a - and its length is at least 2
+    if (part.at(0) == '-' && part.length() > 1) {
+      // First non-dash character is used as the key.
+      char opt = part.at(1);
+      if (opt == '-') {
+        // Part starts with two dashes, which can also be used for boolean
+        // flags.
+        opt = part.at(2);
+
+        // If there aren't any more parts, interpret as a flag.
+        if (argc < i + 2) {
+          opts->insert(std::pair<char, std::string>(opt, ""));
+          continue;
+        }
+      }
+
+      // Otherwise, there must be at least one more part.
+      if (argc < i + 2) {
+        print_command_usage(exe, cmd);
+      }
+
+      std::string next(argv[i + 1]);
+      if (next.at(0) != '-') {
+        opts->insert(std::pair<char, std::string>(opt, next));
+        i += 1;
+      } else {
+        opts->insert(std::pair<char, std::string>(opt, ""));
+      }
+    } else {
+      // Otherwise, positional.
+      args->push_back(part);
+    }
+  }
+}
+
+void parse_encode(const std::string& exe, const std::vector<std::string>& args,
+                  const std::map<char, std::string>& opts) {
+  // There must be exactly one argument specifying the input FASTQ.
+  if (args.size() != 1) {
+    std::cerr << "Error: missing input file" << std::endl;
+    print_encode_usage(exe);
+  }
+  // o option must be provided.
+  if (opts.find('o') == opts.end() || opts.at('o').empty()) {
+    std::cerr << "Error: missing output file" << std::endl;
+    print_encode_usage(exe);
+  }
+  std::string in_path(args[0]);
+  std::string out_path(opts.at('o'));
+  std::string index_path("");
+  if (opts.find('i') != opts.end()) {
+    index_path = opts.at('i');
+  }
+
+  Reads reads(out_path, Mode::Write);
+  Sequence* s = nullptr;
+  std::string line;
+  if (args[0] == "-") {
+    // Input FASTQ is a stream from stdin.
+    for (size_t i = 0; getline(std::cin, line); i++) {
+      switch (i % 4) {
+        // Header
+        case 0:
+          break;
+        // Sequence
+        case 1:
+          s = Sequence::encode(line);
+          reads.write_sequence_chunk(*s);
+          delete s;
+          break;
+        // +
+        case 2:
+          break;
+        // Quality
+        case 3:
+          break;
+      }
+    }
+  } else {
+    // Input FASTQ is a file.
+  }
+
+  if (!index_path.empty()) {
+    reads.write_index(index_path);
+  }
+}
+
+void parse_decode(const std::string& exe, const std::vector<std::string>& args,
+                  const std::map<char, std::string>& opts) {
+  // There must be exactly one argument specifying the input LFQ.
+  if (args.size() != 1) {
+    std::cerr << "Error: missing input file" << std::endl;
+    print_encode_usage(exe);
+  }
+  std::string in_path(args[0]);
+  std::string out_path("");
+  if (opts.find('o') != opts.end()) {
+    out_path = opts.at('o');
+  }
+
+  Reads reads(in_path, Mode::Read);
+  Sequence* s = nullptr;
+  std::string seq;
+  size_t i;
+  if (out_path.empty()) {
+    // Output is to stdout.
+    while (true) {
+      i = reads.get_read_i();
+      s = reads.read_sequence_chunk();
+      if (s == nullptr) {
+        break;
+      }
+      seq = s->decode();
+      delete s;
+      std::cout << "@" << std::to_string(i) << std::endl;
+      std::cout << seq << std::endl;
+      std::cout << "+" << std::endl;
+      std::cout << std::string(seq.length(), 'X') << std::endl;
+    }
+  } else {
+    // Output is to a file.
+  }
+}
+
 int main(int argc, char* argv[]) {
-  // char test[] = {'A', 'C', 'T', 'G', 'C', 'C', 'T', 'A'};
-  // Sequence s = Sequence::encode(test, 8);
-  // for (size_t i = 0; i < s.sequence.size(); i++) {
-  //   std::cout << unsigned(s.sequence.at(i)) << std::endl;
-  // }
+  std::string exe(argv[0]);
 
-  // uint8_t test[] = {47, 70, 241};
-  // std::string filename("filename");
-  // Sequence s(test, 3, 8);
-  // Reads r(filename, Mode::Write);
-  // r.add_sequence(s);
-  // r.write_chunks();
+  // Generic usage.
+  if (argc < 2) {
+    print_usage(exe);
+  }
 
-  // std::string filename("testfile.lfq");
-  // Reads r(filename, Mode::Read);
-  // Sequence* s = r.read_sequence_chunk();
-  // std::cout << s->decode() << std::endl;
+  // Command usage.
+  std::string cmd(argv[1]);
+  if (argc < 3) {
+    print_command_usage(exe, cmd);
+  }
 
-  return 0;
+  // Parse command.
+  std::vector<std::string> args;
+  std::map<char, std::string> opts;
+  parse_command(exe, cmd, argc - 2, argv + 2, &args, &opts);
+  if (cmd == "encode") {
+    parse_encode(exe, args, opts);
+  } else if (cmd == "decode") {
+    parse_decode(exe, args, opts);
+  }
 }
