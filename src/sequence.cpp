@@ -104,7 +104,6 @@ Sequence* Sequence::encode(const char* str, size_t n_bases) {
 }
 
 std::string Sequence::decode() const {
-  char base = 0;
   uint8_t encoded = 0;
   int8_t overflow = 0;
   size_t bit_i = 0;

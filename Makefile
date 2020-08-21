@@ -3,13 +3,13 @@
 build:
 	mkdir -p build && \
 	cd build && \
-	cmake .. && \
+	cmake .. -DCMAKE_BUILD_TYPE=RELEASE && \
 	make
 
 build-windows:
 	mkdir build && \
 	cd build && \
-	cmake .. -G "MinGW Makefiles" && \
+	cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RELEASE && \
 	make
 
 check:
@@ -21,7 +21,7 @@ clean:
 test:
 	mkdir -p build && \
 	cd build && \
-	cmake .. -DTest=ON && \
+	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
 	make && \
 	tests/test && \
 	../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/test.fastq
@@ -29,7 +29,7 @@ test:
 test-windows:
 	mkdir build && \
 	cd build && \
-	cmake .. -G "MinGW Makefiles" -DTest=ON && \
+	cmake .. -G "MinGW Makefiles" -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
 	make && \
 	tests/test.exe && \
 	python ../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/test.fastq
