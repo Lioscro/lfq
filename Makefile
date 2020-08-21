@@ -32,4 +32,4 @@ test-windows:
 	cmake .. -G "MinGW Makefiles" -DTest=ON && \
 	make && \
 	tests/test.exe && \
-	python3 ../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/test.fastq
+	python ../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/test.fastq
