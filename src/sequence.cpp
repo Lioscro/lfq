@@ -37,8 +37,11 @@ uint8_t Sequence::char_to_encoding(const char c) {
     case 'T':
     case 't':
       return Sequence::BASE_T;
-    default:
+    case 'N':
+    case 'n':
       return Sequence::BASE_N;
+    default:
+      throw std::runtime_error("Unrecognized base");
   }
 }
 
@@ -52,8 +55,10 @@ char Sequence::encoding_to_char(const uint8_t e) {
       return 'C';
     case 0x04:
       return 'G';
-    default:
+    case 0x00:
       return 'N';
+    default:
+      throw std::runtime_error("Unrecognized base");
   }
 }
 
@@ -68,7 +73,10 @@ Sequence* Sequence::encode(const char* str, size_t n_bases) {
   size_t bit_i = 0;
   size_t vector_i = 0;
   Sequence* s = new Sequence();
+  size_t vector_size = ceil(static_cast<float>(n_bases * s->BLOCK_SIZE) /
+                            static_cast<float>(s->TYPE_SIZE));
   s->n_bases = n_bases;
+  s->sequence.reserve(vector_size);
 
   for (size_t i = 0; i < n_bases; i++) {
     bit_i = i * s->BLOCK_SIZE;
@@ -78,7 +86,7 @@ Sequence* Sequence::encode(const char* str, size_t n_bases) {
     base = s->char_to_encoding(str[i]);
 
     overflow = (bit_i + s->BLOCK_SIZE) - ((vector_i + 1) * s->TYPE_SIZE);
-    if (overflow > 0) {
+    if (overflow >= 0) {
       // The base needs to span two vector elements.
       block += base >> overflow;
       s->sequence.push_back(block);
@@ -88,13 +96,14 @@ Sequence* Sequence::encode(const char* str, size_t n_bases) {
       block += base << -overflow;
     }
   }
-  s->sequence.push_back(block);
+  if ((bit_i + s->BLOCK_SIZE) % (s->TYPE_SIZE) != 0) {
+    s->sequence.push_back(block);
+  }
 
   return s;
 }
 
 std::string Sequence::decode() const {
-  char base = 0;
   uint8_t encoded = 0;
   int8_t overflow = 0;
   size_t bit_i = 0;

@@ -44,7 +44,7 @@ size_t Reads::read_n_bases() {
     throw std::runtime_error("Malformed n_bases");
   }
   for (uint8_t i = 0; i < this->BASES_BYTES; i++) {
-    n_bases += n_bases_buffer[i]
+    n_bases += ((size_t)n_bases_buffer[i])
                << (Sequence::TYPE_SIZE * (this->BASES_BYTES - i - 1));
   }
   delete[] n_bases_buffer;

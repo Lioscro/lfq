@@ -27,6 +27,16 @@ TEST(SequenceTest, test_encode_with_string) {
   delete s;
 }
 
+TEST(SequenceTest, test_encode_with_string_2) {
+  std::string str("NTCCTAGTCAGCATGTGACATCGAGA");
+  Sequence* s = Sequence::encode(str);
+  EXPECT_THAT(
+      s->get_sequence(),
+      ::testing::ElementsAre(25, 188, 102, 102, 51, 166, 133, 156, 225, 132));
+  EXPECT_EQ(26, s->get_n_bases());
+  delete s;
+}
+
 TEST(SequenceTest, test_encode_with_array) {
   char str[] = {'A', 'C', 'T', 'G', 'C', 'C', 'T', 'A'};
   Sequence* s = Sequence::encode(str, 8);
@@ -39,6 +49,14 @@ TEST(SequenceTest, test_decode) {
   std::vector<uint8_t> sequence{47, 70, 241};
   Sequence s(sequence, 8);
   std::string str("ACTGCCTA");
+  std::string decoded = s.decode();
+  EXPECT_EQ(str, decoded);
+}
+
+TEST(SequenceTest, test_decode_2) {
+  std::vector<uint8_t> sequence{25, 188, 102, 102, 51, 166, 133, 156, 225, 132};
+  Sequence s(sequence, 26);
+  std::string str("NTCCTAGTCAGCATGTGACATCGAGA");
   std::string decoded = s.decode();
   EXPECT_EQ(str, decoded);
 }

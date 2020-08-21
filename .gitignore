@@ -10,5 +10,7 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 build
+__pycache__
+.DS_Store
 dockcross
 dockbuild
