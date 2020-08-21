@@ -9,10 +9,13 @@
 
 static const char VERSION[] = "0.0.0";
 
+void print_version(const std::string& exe) {
+  std::cerr << "lfq " << VERSION << std::endl << std::endl;
+}
+
 void print_usage(const std::string& exe) {
-  std::cerr << "lfq " << VERSION << std::endl
-            << std::endl
-            << "Usage: " << exe << " <CMD> [arguments] .." << std::endl
+  print_version(exe);
+  std::cerr << "Usage: " << exe << " <CMD> [arguments] .." << std::endl
             << std::endl
             << "    encode    Encode a set of FASTQ sequences to LFQ"
             << std::endl
@@ -29,7 +32,10 @@ void print_usage(const std::string& exe) {
 }
 
 void print_encode_usage(const std::string& exe) {
+  print_version(exe);
   std::cerr
+      << "Encodes a FASTQ to LFQ format" << std::endl
+      << std::endl
       << "Usage: " << exe << " encode [options] fastq-file" << std::endl
       << std::endl
       << "Positional arguments:" << std::endl
@@ -46,7 +52,10 @@ void print_encode_usage(const std::string& exe) {
 }
 
 void print_decode_usage(const std::string& exe) {
-  std::cerr << "Usage: " << exe << " decode [options] lfq-file" << std::endl
+  print_version(exe);
+  std::cerr << "Decodes a LFQ file to FASTQ" << std::endl
+            << std::endl
+            << "Usage: " << exe << " decode [options] lfq-file" << std::endl
             << std::endl
             << "Positional arguments:" << std::endl
             << "lfq-file        Input LFQ file." << std::endl
@@ -62,7 +71,10 @@ void print_decode_usage(const std::string& exe) {
 }
 
 void print_index_usage(const std::string& exe) {
-  std::cerr << "Usage: " << exe << " index [options] lfq-file" << std::endl
+  print_version(exe);
+  std::cerr << "Builds an index for a LFQ file for fast seeking" << std::endl
+            << std::endl
+            << "Usage: " << exe << " index [options] lfq-file" << std::endl
             << std::endl
             << "Positional arguments:" << std::endl
             << "lfq-file        Input LFQ file." << std::endl
@@ -75,7 +87,10 @@ void print_index_usage(const std::string& exe) {
 }
 
 void print_view_usage(const std::string& exe) {
-  std::cerr << "Usage: " << exe << " view [options] lfq-file" << std::endl
+  print_version(exe);
+  std::cerr << "View read(s) in a LFQ file" << std::endl
+            << std::endl
+            << "Usage: " << exe << " view [options] lfq-file" << std::endl
             << std::endl
             << "Positional arguments:" << std::endl
             << "lfq-file        Input LFQ file." << std::endl
