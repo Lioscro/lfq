@@ -1,4 +1,7 @@
-.PHONY: build build-windows check clean test test-windows
+.PHONY: build build-windows check clean compile-release compile-release-windows test test-windows
+
+RELEASE_OS ?= local
+RELEASE_VERSION ?= local
 
 build:
 	mkdir -p build && \
@@ -12,11 +15,28 @@ build-windows:
 	cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RELEASE && \
 	make
 
+compile-release:
+	mkdir -p release/lfq
+	cp -rf build/src/lfq release/lfq/
+	cp -rf LICENSE release/lfq/
+	cp -rf README.md release/lfq/
+	cd release && \
+	tar -czvf lfq_${RELEASE_OS}-${RELEASE_VERSION}.tar.gz lfq
+
+compile-release-windows:
+	mkdir -p release/lfq
+	cp -rf build/src/lfq.exe release/lfq/
+	cp -rf LICENSE release/lfq/
+	cp -rf README.md release/lfq/
+	cd release \
+	&& zip -r -X lfq_${RELEASE_OS}-${RELEASE_VERSION}.zip lfq
+
 check:
 	pre-commit run --all-files --verbose
 
 clean:
 	rm -rf build
+	rm -rf release
 
 test:
 	mkdir -p build && \
