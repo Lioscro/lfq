@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
@@ -157,48 +158,62 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
   std::string in_path(args[0]);
   std::string out_path(opts.at('o'));
   std::string index_path("");
-  std::string header_path("");
-  std::string qual_path("");
+  std::ofstream qual_file;
+  std::ofstream header_file;
   if (opts.find('i') != opts.end()) {
     index_path = opts.at('i');
   }
   if (opts.find('h') != opts.end()) {
-    header_path = opts.at('h');
+    header_file.open(opts.at('h'), std::ofstream::trunc);
   }
   if (opts.find('q') != opts.end()) {
-    qual_path = opts.at('q');
+    qual_file.open(opts.at('q'), std::ofstream::trunc);
+  }
+
+  std::ifstream input_file;
+  std::istream& input = (in_path == "-") ? std::cin : input_file;
+  if (in_path != "-") {
+    input_file.open(in_path);
   }
 
   Reads reads(out_path, Mode::Write);
   Sequence* s = nullptr;
   std::string line;
-  if (args[0] == "-") {
-    // Input FASTQ is a stream from stdin.
-    for (size_t i = 0; getline(std::cin, line); i++) {
-      switch (i % 4) {
-        // Header
-        case 0:
-          break;
-        // Sequence
-        case 1:
-          s = Sequence::encode(line);
-          reads.write_sequence_chunk(*s);
-          delete s;
-          break;
-        // +
-        case 2:
-          break;
-        // Quality
-        case 3:
-          break;
-      }
+  // Input FASTQ is a stream from stdin.
+  for (size_t i = 0; getline(input, line); i++) {
+    switch (i % 4) {
+      // Header
+      case 0:
+        if (header_file.is_open()) {
+          header_file << line << std::endl;
+        }
+        break;
+      // Sequence
+      case 1:
+        s = Sequence::encode(line);
+        reads.write_sequence_chunk(*s);
+        delete s;
+        break;
+      // Quality
+      case 3:
+        if (qual_file.is_open()) {
+          qual_file << line << std::endl;
+        }
+        break;
     }
-  } else {
-    // Input FASTQ is a file.
   }
 
   if (!index_path.empty()) {
     reads.write_index(index_path);
+  }
+  if (input_file.is_open()) {
+    input_file.close();
+  }
+  if (header_file.is_open()) {
+    header_file.close();
+  }
+  if (qual_file.is_open()) {
+    qual_file.close();
   }
 }
 
@@ -211,39 +226,67 @@ void parse_decode(const std::string& exe, const std::vector<std::string>& args,
   }
   std::string in_path(args[0]);
   std::string out_path("");
-  std::string header_path("");
-  std::string qual_path("");
+  std::ifstream qual_file;
+  std::ifstream header_file;
   if (opts.find('o') != opts.end()) {
     out_path = opts.at('o');
   }
   if (opts.find('h') != opts.end()) {
-    header_path = opts.at('h');
+    header_file.open(opts.at('h'));
   }
   if (opts.find('q') != opts.end()) {
-    qual_path = opts.at('q');
+    qual_file.open(opts.at('q'));
+  }
+
+  std::ofstream output_file;
+  std::ostream& output = (out_path.empty()) ? std::cout : output_file;
+  if (!out_path.empty()) {
+    output_file.open(out_path, std::ofstream::trunc);
   }
 
   Reads reads(in_path, Mode::Read);
   Sequence* s = nullptr;
+  std::string header;
   std::string seq;
+  std::string qual;
   size_t i;
-  if (out_path.empty()) {
-    // Output is to stdout.
-    while (true) {
-      i = reads.get_read_i();
-      s = reads.read_sequence_chunk();
-      if (s == nullptr) {
-        break;
-      }
-      seq = s->decode();
-      delete s;
-      std::cout << "@" << std::to_string(i) << std::endl;
-      std::cout << seq << std::endl;
-      std::cout << "+" << std::endl;
-      std::cout << std::string(seq.length(), 'X') << std::endl;
+  // Output is to stdout.
+  while (true) {
+    i = reads.get_read_i();
+    s = reads.read_sequence_chunk();
+    if (s == nullptr) {
+      break;
     }
-  } else {
-    // Output is to a file.
+    seq = s->decode();
+    delete s;
+    // Header
+    if (header_file.is_open()) {
+      getline(header_file, header);
+      output << header << std::endl;
+    } else {
+      output << "@" << std::to_string(i) << std::endl;
+    }
+    // Sequence
+    output << seq << std::endl;
+    // +
+    output << "+" << std::endl;
+    // Quality
+    if (qual_file.is_open()) {
+      getline(qual_file, qual);
+      output << qual << std::endl;
+    } else {
+      output << std::string(seq.length(), '!') << std::endl;
+    }
+  }
+
+  if (output_file.is_open()) {
+    output_file.close();
+  }
+  if (header_file.is_open()) {
+    header_file.close();
+  }
+  if (qual_file.is_open()) {
+    qual_file.close();
   }
 }
 

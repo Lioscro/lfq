@@ -10,4 +10,9 @@ clean:
 	rm -rf build
 
 test:
-	mkdir -p build && cd build && cmake .. -DTest=ON && make && tests/test
+	mkdir -p build && \
+	cd build && \
+	cmake .. -DTest=ON && \
+	make && \
+	tests/test && \
+	../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/test.fastq
