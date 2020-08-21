@@ -10,7 +10,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@master
       - name: Setup python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: '3.8'
           architecture: x64
@@ -26,6 +26,11 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: x64
       - name: Build and run tests
         run: make test
   test-macos:
@@ -34,6 +39,11 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: x64
       - name: Build and run tests
         run: make test
   test-windows:
@@ -42,13 +52,13 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: x64
       - name: Build and run tests
-        run: |
-          mkdir build
-          cd build
-          cmake .. -G "MinGW Makefiles" -DTest=ON
-          make
-          tests/test.exe
+        run: make test-windows
   # test-linux:
   #   runs-on: ubuntu-20.04
   #   name: Test on Linux
