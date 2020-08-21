@@ -7,7 +7,7 @@
 #include "reads.hpp"
 #include "sequence.hpp"
 
-static const char VERSION[] = "0.0.0";
+static const char VERSION[] = "0.0.1";
 
 void print_version(const std::string& exe) {
   std::cerr << "lfq " << VERSION << std::endl << std::endl;
