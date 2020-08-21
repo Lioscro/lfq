@@ -2,10 +2,10 @@
 import argparse
 import os
 import shutil
-import subprocess
 import tempfile
 
 from utils import lfq_decode, lfq_encode, md5
+
 
 def test_encode_decode(exe_path, fastq_path):
     temp_dir = tempfile.mkdtemp()
@@ -21,6 +21,7 @@ def test_encode_decode(exe_path, fastq_path):
         assert md5(fastq_path) == md5(decode_path)
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

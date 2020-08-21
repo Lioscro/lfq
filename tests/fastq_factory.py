@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import argparse
-import os
 import random
 import uuid
 
 UPPER = ['A', 'T', 'C', 'G', 'N']
 LOWER = ['a', 't', 'c', 'g', 'n']
-QUALS = [chr(i+33) for i in range(41)]
+QUALS = [chr(i + 33) for i in range(41)]
+
 
 def fastq_factory(out_path, n, short, long, upper=False, lower=False):
     alphabet = UPPER + LOWER
