@@ -53,6 +53,14 @@ TEST(SequenceTest, test_decode) {
   EXPECT_EQ(str, decoded);
 }
 
+TEST(SequenceTest, test_decode_2) {
+  std::vector<uint8_t> sequence{25, 188, 102, 102, 51, 166, 133, 156, 225, 132};
+  Sequence s(sequence, 26);
+  std::string str("NTCCTAGTCAGCATGTGACATCGAGA");
+  std::string decoded = s.decode();
+  EXPECT_EQ(str, decoded);
+}
+
 TEST(SequenceTest, test_to_chunk) {
   size_t size;
   std::vector<uint8_t> sequence{47, 70, 241};
