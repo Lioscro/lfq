@@ -1,4 +1,4 @@
-.PHONY: build build-windows check clean compile-release compile-release-windows test test-windows
+.PHONY: build build-windows check clean compile-release compile-release-windows test test-windows bump-patch bump-minor bump-major push-release
 
 RELEASE_OS ?= local
 RELEASE_VERSION ?= local
@@ -55,3 +55,15 @@ test-windows:
 	make && \
 	tests/test.exe && \
 	python ../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/example.fastq
+
+bump-patch:
+	bumpversion patch
+
+bump-minor:
+	bumpversion minor
+
+bump-major:
+	bumpversion major
+
+push-release:
+	git push && git push --tags
