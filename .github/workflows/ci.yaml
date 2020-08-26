@@ -16,7 +16,7 @@ jobs:
           architecture: x64
       - name: Install dependencies
         run: |
-          sudo apt-get install cppcheck
+          sudo apt-get install clang-format cppcheck
           pip install -r requirements.txt
       - name: Check code quality
         run: make check
