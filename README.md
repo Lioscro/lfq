@@ -1,7 +1,7 @@
 # lfq
 
 ```
-lfq 0.0.2
+lfq 0.0.3
 
 Usage: lfq <CMD> [arguments] ..
 
@@ -15,7 +15,7 @@ Running lfq <CMD> without arguments prints usage information for <CMD>
 
 ### encode
 ```
-lfq 0.0.2
+lfq 0.0.3
 
 Encodes a FASTQ to LFQ format
 
@@ -33,7 +33,7 @@ Options:
 
 ### decode
 ```
-lfq 0.0.2
+lfq 0.0.3
 
 Decodes a LFQ file to FASTQ
 
@@ -50,7 +50,7 @@ Options:
 
 ### index
 ```
-lfq 0.0.2
+lfq 0.0.3
 
 Builds an index for a LFQ file for fast seeking
 
@@ -65,7 +65,7 @@ Options:
 
 ### view
 ```
-lfq 0.0.2
+lfq 0.0.3
 
 View read(s) in a LFQ file
 
