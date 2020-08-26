@@ -69,12 +69,14 @@ lfq 0.0.3
 
 View read(s) in a LFQ file
 
-Usage: lfq view [options] lfq-file
+Usage: build/src/lfq view [options] lfq-file
 
 Positional arguments:
 lfq-file        Input LFQ file.
 
 Options:
--n, --num       (required) Which read to extract
+-r, --range     (required) Range of reads to extract, in the format
+                'start:end' which prints reads at indices [start, end).
+                Provide an integer to view a single read.
 -i, --index     Index file. Recommended for fast lookup
 ```
