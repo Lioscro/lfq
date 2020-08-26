@@ -62,11 +62,10 @@ char* Reads::read_sequence(size_t vector_size) {
 }
 
 void Reads::write_sequence_chunk(const Sequence& sequence) {
-  size_t size;
   uint32_t old_pos = this->file.tellg();
-  char* chunk =
-      reinterpret_cast<char*>(sequence.to_chunk(this->BASES_BYTES, &size));
-  this->file.write(chunk, size);
+  size_t size = sequence.get_chunk_size(this->BASES_BYTES);
+  uint8_t* chunk = sequence.to_chunk(this->BASES_BYTES);
+  this->file.write(reinterpret_cast<char*>(chunk), size);
   delete[] chunk;
   this->index.push_back(old_pos);
   this->read_i++;
@@ -83,8 +82,10 @@ Sequence* Reads::read_sequence_chunk() {
 
   uint32_t old_pos = this->file.tellg();
   size_t n_bases = this->read_n_bases();
-  size_t vector_size = ceil(static_cast<float>(n_bases * Sequence::BLOCK_SIZE) /
-                            static_cast<float>(Sequence::TYPE_SIZE));
+  size_t n_blocks = (n_bases / 2) + (n_bases % 2);
+  size_t vector_size =
+      ceil(static_cast<float>(n_blocks * Sequence::BLOCK_SIZE) /
+           Sequence::TYPE_SIZE);
   char* buffer = this->read_sequence(vector_size);
   Sequence* s =
       new Sequence(reinterpret_cast<uint8_t*>(buffer), vector_size, n_bases);
@@ -130,6 +131,7 @@ void Reads::build_index() {
   uint32_t pos = 0;
   uint32_t old_pos = this->file.tellg();
   size_t n_bases;
+  size_t n_blocks;
   size_t vector_size;
   this->index.clear();
   this->file.seekg(pos);
@@ -137,8 +139,8 @@ void Reads::build_index() {
   while (true) {
     pos = this->file.tellg();
     n_bases = this->read_n_bases();
-    vector_size = ceil(static_cast<float>(n_bases * Sequence::BLOCK_SIZE) /
-                       static_cast<float>(Sequence::TYPE_SIZE));
+    n_blocks = Sequence::get_n_blocks(n_bases);
+    vector_size = Sequence::get_vector_size(n_blocks);
     this->file.seekg(vector_size, std::istream::cur);
     this->index.push_back(pos);
 
@@ -168,8 +170,7 @@ void Reads::seek(size_t i) {
     pos = this->index[current_i];
     this->file.seekg(pos);
     n_bases = this->read_n_bases();
-    vector_size = ceil(static_cast<float>(n_bases * Sequence::BLOCK_SIZE) /
-                       static_cast<float>(Sequence::TYPE_SIZE));
+    vector_size = Sequence::get_vector_size(Sequence::get_n_blocks(n_bases));
     this->file.seekg(vector_size, std::istream::cur);
   } else {
     this->file.seekg(0);
@@ -182,8 +183,7 @@ void Reads::seek(size_t i) {
 
     pos = this->file.tellg();
     n_bases = this->read_n_bases();
-    vector_size = ceil(static_cast<float>(n_bases * Sequence::BLOCK_SIZE) /
-                       static_cast<float>(Sequence::TYPE_SIZE));
+    vector_size = Sequence::get_vector_size(Sequence::get_n_blocks(n_bases));
     this->file.seekg(vector_size, std::istream::cur);
     this->index.push_back(pos);
     current_i++;
