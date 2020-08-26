@@ -22,31 +22,30 @@ TEST(SequenceTest, test_constructor_with_array) {
 TEST(SequenceTest, test_encode_with_string) {
   std::string str("ACTGCCTA");
   Sequence* s = Sequence::encode(str);
-  EXPECT_THAT(s->get_sequence(), ::testing::ElementsAre(47, 70, 241));
+  EXPECT_THAT(s->get_sequence(), ::testing::ElementsAre(23, 77, 224));
   EXPECT_EQ(8, s->get_n_bases());
   delete s;
 }
 
 TEST(SequenceTest, test_encode_with_string_2) {
-  std::string str("NTCCTAGTCAGCATGTGACATCGAGA");
+  std::string str("NTCCTAGTCAGCATGTGACATCGAG");
   Sequence* s = Sequence::encode(str);
-  EXPECT_THAT(
-      s->get_sequence(),
-      ::testing::ElementsAre(25, 188, 102, 102, 51, 166, 133, 156, 225, 132));
-  EXPECT_EQ(26, s->get_n_bases());
+  EXPECT_THAT(s->get_sequence(),
+              ::testing::ElementsAre(177, 189, 178, 96, 59, 209, 57, 168, 0));
+  EXPECT_EQ(25, s->get_n_bases());
   delete s;
 }
 
 TEST(SequenceTest, test_encode_with_array) {
   char str[] = {'A', 'C', 'T', 'G', 'C', 'C', 'T', 'A'};
   Sequence* s = Sequence::encode(str, 8);
-  EXPECT_THAT(s->get_sequence(), ::testing::ElementsAre(47, 70, 241));
+  EXPECT_THAT(s->get_sequence(), ::testing::ElementsAre(23, 77, 224));
   EXPECT_EQ(8, s->get_n_bases());
   delete s;
 }
 
 TEST(SequenceTest, test_decode) {
-  std::vector<uint8_t> sequence{47, 70, 241};
+  std::vector<uint8_t> sequence{23, 77, 224};
   Sequence s(sequence, 8);
   std::string str("ACTGCCTA");
   std::string decoded = s.decode();
@@ -54,18 +53,18 @@ TEST(SequenceTest, test_decode) {
 }
 
 TEST(SequenceTest, test_decode_2) {
-  std::vector<uint8_t> sequence{25, 188, 102, 102, 51, 166, 133, 156, 225, 132};
-  Sequence s(sequence, 26);
-  std::string str("NTCCTAGTCAGCATGTGACATCGAGA");
+  std::vector<uint8_t> sequence{177, 189, 178, 96, 59, 209, 57, 168, 0};
+  Sequence s(sequence, 25);
+  std::string str("NTCCTAGTCAGCATGTGACATCGAG");
   std::string decoded = s.decode();
   EXPECT_EQ(str, decoded);
 }
 
 TEST(SequenceTest, test_to_chunk) {
-  size_t size;
   std::vector<uint8_t> sequence{47, 70, 241};
   Sequence s(sequence, 9999);
-  uint8_t* chunk = s.to_chunk(4, &size);
+  size_t size = s.get_chunk_size(4);
+  uint8_t* chunk = s.to_chunk(4);
   EXPECT_EQ(7, size);
   EXPECT_EQ(0, chunk[0]);
   EXPECT_EQ(0, chunk[1]);
