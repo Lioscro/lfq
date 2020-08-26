@@ -59,6 +59,7 @@ class Reads {
   /* Index stuff */
   void write_index(const std::string& filename);
   void read_index(const std::string& filename);
+  void read_index(const std::string& filename, size_t n);
   void build_index();  // Only in Mode::Read
 
   /* Function to seek to the start of a specific read. */
