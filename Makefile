@@ -46,7 +46,7 @@ test:
 	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
 	make && \
 	tests/test && \
-	../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/example.fastq
+	nosetests --verbose tests.test_lfq
 
 test-windows:
 	mkdir build && \
