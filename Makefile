@@ -45,7 +45,7 @@ test:
 	cd build && \
 	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
 	make && \
-	tests/test && \
+	tests/test
 	nosetests --verbose tests.test_lfq
 
 test-windows:
@@ -53,7 +53,7 @@ test-windows:
 	cd build && \
 	cmake .. -G "MinGW Makefiles" -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
 	make && \
-	tests/test.exe && \
+	tests/test.exe
 	nosetests --verbose tests.test_lfq
 
 bump-patch:
