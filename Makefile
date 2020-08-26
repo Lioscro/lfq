@@ -54,7 +54,7 @@ test-windows:
 	cmake .. -G "MinGW Makefiles" -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
 	make && \
 	tests/test.exe && \
-	python ../tests/test_encode_decode.py src/lfq ../tests/fixtures/fastq/example.fastq
+	nosetests --verbose tests.test_lfq
 
 bump-patch:
 	bumpversion patch
