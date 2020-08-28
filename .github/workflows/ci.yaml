@@ -68,7 +68,9 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.1
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/horta/zlib.install/master/install.bat', 'install.bat'); ./install.bat
+          pip install -r requirements.txt
       - name: Build and run tests
         run: |
           $env:BOOST_ROOT=$env:BOOST_ROOT_1_72_0
