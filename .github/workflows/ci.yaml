@@ -70,7 +70,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Build and run tests
-        run: make test-windows
+        run: |
+          set BOOST_ROOT=%BOOST_ROOT_1_72_0%
+          make test-windows
   # test-linux:
   #   runs-on: ubuntu-20.04
   #   name: Test on Linux
