@@ -73,33 +73,3 @@ jobs:
         run: |
           $env:BOOST_ROOT=$env:BOOST_ROOT_1_72_0
           make test-windows
-  # test-linux:
-  #   runs-on: ubuntu-20.04
-  #   name: Test on Linux
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@master
-  #     - name: Build and run tests
-  #       run: |
-  #         docker run --rm dockbuild/centos5:latest > ./dockbuild
-  #         chmod +x ./dockbuild
-  #         ./dockbuild bash -c "make test"
-  # test-macos:
-  #   runs-on: macos-10.15
-  #   name: Test on MacOS
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@master
-  #     - name: Build and run tests
-  #       run: make test
-  # test-windows:
-  #   runs-on: ubuntu-20.04
-  #   name: Test on Windows
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@master
-  #     - name: Build and run tests
-  #       run: |
-  #         docker run --rm dockcross/windows-static-x64:20200609-7fa7213 > ./dockcross
-  #         chmod +x ./dockcross
-  #         ./dockcross bash -c "sudo ln -s /usr/bin/make /usr/bin/gmake && make test"

@@ -7,19 +7,27 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RELEASE")
 endif()
 
-# Build config
+# Build config.
+# Always build statically-linked version.
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-Wall)
+set(BUILD_SHARED_LIBS OFF)
+set(Boost_USE_STATIC_LIBS ON)
+if(UNIX AND NOT APPLE)
+  set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+endif()
+add_compile_options(-Wall -fvisibility=hidden)
 # Windows MSVC doesn't support -Werror
 if(NOT MSVC)
    add_compile_options(-Werror)
 endif()
 if(CMAKE_BUILD_TYPE EQUAL "RELEASE")
   add_compile_options(-O3)
-else()
-  add_compile_options(-Og)
 endif()
+
+# zlib
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
 
 # Boost
 find_package(Boost REQUIRED COMPONENTS iostreams)
