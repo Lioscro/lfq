@@ -9,7 +9,7 @@
 
 #include "sequence.hpp"
 
-enum Mode { Read, Write };
+enum ReadsMode { Read, Write };
 
 class Reads {
  private:
@@ -21,7 +21,7 @@ class Reads {
   /* File object */
   std::string filename;
   std::fstream file;
-  void open(const std::string& filename, Mode mode);
+  void open(const std::string& filename, ReadsMode mode);
 
   /* Index for fast seeking. read_i holds the read index of the NEXT read to
    * read/write .*/
@@ -44,7 +44,7 @@ class Reads {
   static const char EXTENSION[];
   static const char INDEX_EXTENSION[];
 
-  Reads(const std::string& filename, Mode mode);
+  Reads(const std::string& filename, ReadsMode mode);
   ~Reads();
 
   /* Accessors */
@@ -60,7 +60,7 @@ class Reads {
   void write_index(const std::string& filename);
   void read_index(const std::string& filename);
   void read_index(const std::string& filename, size_t n);
-  void build_index();  // Only in Mode::Read
+  void build_index();  // Only in ReadsMode::Read
 
   /* Function to seek to the start of a specific read. */
   void seek(size_t i);

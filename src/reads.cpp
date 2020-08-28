@@ -4,7 +4,7 @@ const char Reads::EXTENSION[] = "lfq";
 const char Reads::INDEX_EXTENSION[] = "lfqi";
 const uint8_t Reads::BASES_BYTES = 4;
 
-Reads::Reads(const std::string& filename, Mode mode)
+Reads::Reads(const std::string& filename, ReadsMode mode)
     : filename(filename), index(), read_i(0) {
   this->open(filename, mode);
 }
@@ -17,12 +17,12 @@ size_t Reads::get_pos() { return this->file.tellg(); }
 
 size_t Reads::get_read_i() { return this->read_i; }
 
-void Reads::open(const std::string& filename, Mode mode) {
+void Reads::open(const std::string& filename, ReadsMode mode) {
   switch (mode) {
-    case Mode::Read:
+    case ReadsMode::Read:
       this->file.open(filename, std::fstream::in | std::fstream::binary);
       break;
-    case Mode::Write:
+    case ReadsMode::Write:
       this->file.open(filename, std::fstream::out | std::fstream::binary |
                                     std::fstream::trunc);
       break;
