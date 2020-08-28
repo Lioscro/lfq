@@ -82,13 +82,10 @@ Sequence* Reads::read_sequence_chunk() {
 
   uint32_t old_pos = this->file.tellg();
   size_t n_bases = this->read_n_bases();
-  size_t n_blocks = (n_bases / 2) + (n_bases % 2);
-  size_t vector_size =
-      ceil(static_cast<float>(n_blocks * Sequence::BLOCK_SIZE) /
-           Sequence::TYPE_SIZE);
+  size_t n_blocks = Sequence::get_n_blocks(n_bases);
+  size_t vector_size = Sequence::get_vector_size(n_blocks);
   char* buffer = this->read_sequence(vector_size);
-  Sequence* s =
-      new Sequence(reinterpret_cast<uint8_t*>(buffer), vector_size, n_bases);
+  Sequence* s = new Sequence(reinterpret_cast<uint8_t*>(buffer), n_bases);
   delete[] buffer;
 
   // Add to index if this read is valid (i.e. if code gets here)
@@ -120,6 +117,24 @@ void Reads::read_index(const std::string& filename) {
   if (index_file.is_open()) {
     while (getline(index_file, line)) {
       this->index.push_back(std::stoul(line));
+    }
+    index_file.close();
+  } else {
+    throw std::runtime_error("Failed to open index");
+  }
+}
+
+void Reads::read_index(const std::string& filename, size_t n) {
+  std::string line;
+  std::ifstream index_file;
+  index_file.open(filename);
+  if (index_file.is_open()) {
+    for (size_t i = 0; i < n; i++) {
+      if (getline(index_file, line)) {
+        this->index.push_back(std::stoul(line));
+      } else {
+        throw std::runtime_error("Reached end of index");
+      }
     }
     index_file.close();
   } else {

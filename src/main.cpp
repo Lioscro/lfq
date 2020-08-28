@@ -90,18 +90,24 @@ void print_index_usage(const std::string& exe) {
 
 void print_view_usage(const std::string& exe) {
   print_version(exe);
-  std::cerr << "View read(s) in a LFQ file" << std::endl
-            << std::endl
-            << "Usage: " << exe << " view [options] lfq-file" << std::endl
-            << std::endl
-            << "Positional arguments:" << std::endl
-            << "lfq-file        Input LFQ file." << std::endl
-            << std::endl
-            << "Options:" << std::endl
-            << "-n, --num       (required) Which read to extract" << std::endl
-            << "-i, --index     Index file. Recommended for fast lookup"
-            << std::endl
-            << std::endl;
+  std::cerr
+      << "View read(s) in a LFQ file" << std::endl
+      << std::endl
+      << "Usage: " << exe << " view [options] lfq-file" << std::endl
+      << std::endl
+      << "Positional arguments:" << std::endl
+      << "lfq-file        Input LFQ file." << std::endl
+      << std::endl
+      << "Options:" << std::endl
+      << "-r, --range     (required) Range of reads to extract, in the format "
+      << std::endl
+      << "                'start:end' which prints reads at indices [start, "
+         "end)."
+      << std::endl
+      << "                Provide an integer to view a single read."
+      << std::endl
+      << "-i, --index     Index file. Recommended for fast lookup" << std::endl
+      << std::endl;
   exit(1);
 }
 
@@ -326,27 +332,42 @@ void parse_view(const std::string& exe, const std::vector<std::string>& args,
   // There must be exactly one argument specifying the input LFQ.
   if (args.size() != 1) {
     std::cerr << "Error: missing input file" << std::endl;
-    print_encode_usage(exe);
+    print_view_usage(exe);
   }
   // n option must be provided.
-  if (opts.find('n') == opts.end() || opts.at('n').empty()) {
-    std::cerr << "Error: missing read number" << std::endl;
-    print_encode_usage(exe);
+  if (opts.find('r') == opts.end() || opts.at('r').empty()) {
+    std::cerr << "Error: missing read range" << std::endl;
+    print_view_usage(exe);
   }
   std::string in_path(args[0]);
-  size_t n = stoul(opts.at('n'));
+  std::string range(opts.at('r'));
+  std::vector<size_t> indices;
   std::string index_path("");
   if (opts.find('i') != opts.end()) {
     index_path = opts.at('i');
   }
+
+  size_t colon_pos = range.find(':');
+  if (colon_pos != std::string::npos) {
+    size_t start = stoul(range.substr(0, colon_pos));
+    size_t end =
+        stoul(range.substr(colon_pos + 1, range.length() - colon_pos - 1));
+    for (size_t i = start; i < end; i++) {
+      indices.push_back(i);
+    }
+  } else {
+    indices.push_back(stoul(range));
+  }
   Reads reads(in_path, ReadsMode::Read);
   if (!index_path.empty()) {
-    reads.read_index(index_path);
+    reads.read_index(index_path, indices[0]);
   }
-  reads.seek(n);
-  Sequence* s = reads.read_sequence_chunk();
-  std::cout << s->decode() << std::endl;
-  delete s;
+  reads.seek(indices[0]);
+  for (size_t i = 0; i < indices.size(); i++) {
+    Sequence* s = reads.read_sequence_chunk();
+    std::cout << s->decode() << std::endl;
+    delete s;
+  }
 }
 
 int main(int argc, char* argv[]) {
