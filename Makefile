@@ -52,7 +52,7 @@ test-windows:
 	mkdir build && \
 	cd build && \
 	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
-	msbuild lfq.sln && \
+	MSBuild.exe lfq.sln && \
 	tests/test.exe
 	nosetests --verbose tests.test_lfq
 
