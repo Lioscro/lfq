@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "reads.hpp"
 #include "sequence.hpp"
+#include "stream.hpp"
 
 static const char VERSION[] = "0.0.3";
 
@@ -170,37 +172,38 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
     std::cerr << "Error: missing output file" << std::endl;
     print_encode_usage(exe);
   }
+
+  // Paths as strings
   std::string in_path(args[0]);
   std::string out_path(opts.at('o'));
-  std::string index_path("");
-  std::ofstream qual_file;
-  std::ofstream header_file;
-  if (opts.find('i') != opts.end()) {
-    index_path = opts.at('i');
-  }
-  if (opts.find('h') != opts.end()) {
-    header_file.open(opts.at('h'), std::ofstream::trunc);
-  }
-  if (opts.find('q') != opts.end()) {
-    qual_file.open(opts.at('q'), std::ofstream::trunc);
-  }
+  std::string index_path(opts.find('i') != opts.end() ? opts.at('i') : "");
+  std::string header_path(opts.find('h') != opts.end() ? opts.at('h') : "");
+  std::string qual_path(opts.find('q') != opts.end() ? opts.at('q') : "");
 
-  std::ifstream input_file;
-  std::istream& input = (in_path == "-") ? std::cin : input_file;
-  if (in_path != "-") {
-    input_file.open(in_path);
-  }
-
-  Reads reads(out_path, Mode::Write);
+  // Actual stream objects for reading/writing
+  InStream* in = (in_path == "-") ? new InStream() : new InStream(in_path);
+  OutStream* header =
+      (!index_path.empty()
+           ? new OutStream(index_path, boost::ends_with(index_path, ".gz")
+                                           ? StreamType::Gzip
+                                           : StreamType::Plain)
+           : nullptr);
+  OutStream* qual =
+      (!qual_path.empty()
+           ? new OutStream(qual_path, boost::ends_with(qual_path, ".gz")
+                                          ? StreamType::Gzip
+                                          : StreamType::Plain)
+           : nullptr);
+  Reads reads(out_path, ReadsMode::Write);
   Sequence* s = nullptr;
   std::string line;
   // Input FASTQ is a stream from stdin.
-  for (size_t i = 0; getline(input, line); i++) {
+  for (size_t i = 0; in->getline(line); i++) {
     switch (i % 4) {
       // Header
       case 0:
-        if (header_file.is_open()) {
-          header_file << line << std::endl;
+        if (header != nullptr) {
+          *header << line << std::endl;
         }
         break;
       // Sequence
@@ -211,8 +214,8 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
         break;
       // Quality
       case 3:
-        if (qual_file.is_open()) {
-          qual_file << line << std::endl;
+        if (qual != nullptr) {
+          *qual << line << std::endl;
         }
         break;
     }
@@ -221,15 +224,9 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
   if (!index_path.empty()) {
     reads.write_index(index_path);
   }
-  if (input_file.is_open()) {
-    input_file.close();
-  }
-  if (header_file.is_open()) {
-    header_file.close();
-  }
-  if (qual_file.is_open()) {
-    qual_file.close();
-  }
+  delete in;
+  delete header;
+  delete qual;
 }
 
 void parse_decode(const std::string& exe, const std::vector<std::string>& args,
@@ -259,7 +256,7 @@ void parse_decode(const std::string& exe, const std::vector<std::string>& args,
     output_file.open(out_path, std::ofstream::trunc);
   }
 
-  Reads reads(in_path, Mode::Read);
+  Reads reads(in_path, ReadsMode::Read);
   Sequence* s = nullptr;
   std::string header;
   std::string seq;
@@ -319,7 +316,7 @@ void parse_index(const std::string& exe, const std::vector<std::string>& args,
   }
   std::string in_path(args[0]);
   std::string out_path(opts.at('o'));
-  Reads reads(in_path, Mode::Read);
+  Reads reads(in_path, ReadsMode::Read);
   reads.build_index();
   reads.write_index(out_path);
 }
@@ -342,7 +339,7 @@ void parse_view(const std::string& exe, const std::vector<std::string>& args,
   if (opts.find('i') != opts.end()) {
     index_path = opts.at('i');
   }
-  Reads reads(in_path, Mode::Read);
+  Reads reads(in_path, ReadsMode::Read);
   if (!index_path.empty()) {
     reads.read_index(index_path);
   }

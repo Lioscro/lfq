@@ -7,7 +7,7 @@
 
 TEST(ReadsTest, test_read_sequence_chunk) {
   std::string filename("../tests/fixtures/testfile.lfq");
-  Reads r(filename, Mode::Read);
+  Reads r(filename, ReadsMode::Read);
   Sequence* s1 = r.read_sequence_chunk();
   std::string str1("ACTGCCTA");
   std::string decoded1 = s1->decode();
@@ -28,14 +28,14 @@ TEST(ReadsTest, test_read_sequence_chunk) {
 TEST(ReadsTest, test_read_index) {
   std::string filename("../tests/fixtures/testfile.lfq");
   std::string index_filename("../tests/fixtures/testfile.lfqi");
-  Reads r(filename, Mode::Read);
+  Reads r(filename, ReadsMode::Read);
   r.read_index(index_filename);
   EXPECT_THAT(r.get_index(), ::testing::ElementsAre(0, 7));
 }
 
 TEST(ReadsTest, test_build_index) {
   std::string filename("../tests/fixtures/testfile.lfq");
-  Reads r(filename, Mode::Read);
+  Reads r(filename, ReadsMode::Read);
   r.build_index();
   EXPECT_THAT(r.get_index(), ::testing::ElementsAre(0, 7));
   EXPECT_EQ(0, r.get_pos());
@@ -44,7 +44,7 @@ TEST(ReadsTest, test_build_index) {
 TEST(ReadsTest, test_seek_uses_index) {
   std::string filename("../tests/fixtures/testfile.lfq");
   std::string index_filename("../tests/fixtures/testfile.lfqi");
-  Reads r(filename, Mode::Read);
+  Reads r(filename, ReadsMode::Read);
   r.read_index(index_filename);
   r.seek(1);
   EXPECT_EQ(7, r.get_pos());
@@ -58,7 +58,7 @@ TEST(ReadsTest, test_seek_uses_index) {
 
 TEST(ReadsTest, test_seek_jumps) {
   std::string filename("../tests/fixtures/testfile.lfq");
-  Reads r(filename, Mode::Read);
+  Reads r(filename, ReadsMode::Read);
   r.seek(1);
   EXPECT_EQ(7, r.get_pos());
   EXPECT_THAT(r.get_index(), ::testing::ElementsAre(0));
