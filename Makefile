@@ -12,8 +12,8 @@ build:
 build-windows:
 	mkdir build && \
 	cd build && \
-	cmake .. -DCMAKE_BUILD_TYPE=RELEASE && \
-	msbuild lfq.sln
+	cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RELEASE && \
+	make
 
 compile-release:
 	mkdir -p release/lfq
@@ -51,8 +51,8 @@ test:
 test-windows:
 	mkdir build && \
 	cd build && \
-	cmake .. -G "MinGW Makefiles" -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
-	make && \
+	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
+	msbuild lfq.sln && \
 	tests/test.exe
 	nosetests --verbose tests.test_lfq
 
