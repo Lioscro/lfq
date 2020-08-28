@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "boost/algorithm/string/predicate.hpp"
 #include "reads.hpp"
 #include "sequence.hpp"
 #include "stream.hpp"
@@ -189,27 +188,26 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
   // Actual stream objects for reading/writing
   InStream* in = (in_path == "-") ? new InStream() : new InStream(in_path);
   OutStream* header =
-      (!index_path.empty()
-           ? new OutStream(index_path, boost::ends_with(index_path, ".gz")
-                                           ? StreamType::Gzip
-                                           : StreamType::Plain)
+      (!header_path.empty()
+           ? new OutStream(header_path, is_gzip_extension(header_path)
+                                            ? StreamType::Gzip
+                                            : StreamType::Plain)
            : nullptr);
-  OutStream* qual =
-      (!qual_path.empty()
-           ? new OutStream(qual_path, boost::ends_with(qual_path, ".gz")
-                                          ? StreamType::Gzip
-                                          : StreamType::Plain)
-           : nullptr);
+  OutStream* qual = (!qual_path.empty()
+                         ? new OutStream(qual_path, is_gzip_extension(qual_path)
+                                                        ? StreamType::Gzip
+                                                        : StreamType::Plain)
+                         : nullptr);
   Reads reads(out_path, ReadsMode::Write);
   Sequence* s = nullptr;
   std::string line;
   // Input FASTQ is a stream from stdin.
-  for (size_t i = 0; in->getline(line); i++) {
+  for (size_t i = 0; getline(in->get_stream(), line); i++) {
     switch (i % 4) {
       // Header
       case 0:
         if (header != nullptr) {
-          *header << line << std::endl;
+          header->get_stream() << line << std::endl;
         }
         break;
       // Sequence
@@ -221,7 +219,7 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
       // Quality
       case 3:
         if (qual != nullptr) {
-          *qual << line << std::endl;
+          qual->get_stream() << line << std::endl;
         }
         break;
     }
@@ -242,31 +240,28 @@ void parse_decode(const std::string& exe, const std::vector<std::string>& args,
     std::cerr << "Error: missing input file" << std::endl;
     print_encode_usage(exe);
   }
-  std::string in_path(args[0]);
-  std::string out_path("");
-  std::ifstream qual_file;
-  std::ifstream header_file;
-  if (opts.find('o') != opts.end()) {
-    out_path = opts.at('o');
-  }
-  if (opts.find('h') != opts.end()) {
-    header_file.open(opts.at('h'));
-  }
-  if (opts.find('q') != opts.end()) {
-    qual_file.open(opts.at('q'));
-  }
 
-  std::ofstream output_file;
-  std::ostream& output = (out_path.empty()) ? std::cout : output_file;
-  if (!out_path.empty()) {
-    output_file.open(out_path, std::ofstream::trunc);
-  }
+  // Paths as strings
+  std::string in_path(args[0]);
+  std::string out_path(opts.find('o') != opts.end() ? opts.at('o') : "");
+  std::string header_path(opts.find('h') != opts.end() ? opts.at('h') : "");
+  std::string qual_path(opts.find('q') != opts.end() ? opts.at('q') : "");
+
+  // Actual stream objects for reading/writing
+  InStream* in = new InStream(in_path);
+  InStream* header = !header_path.empty() ? new InStream(header_path) : nullptr;
+  InStream* qual = !qual_path.empty() ? new InStream(qual_path) : nullptr;
+  OutStream* out =
+      (!out_path.empty() ? new OutStream(out_path, is_gzip_extension(out_path)
+                                                       ? StreamType::Gzip
+                                                       : StreamType::Plain)
+                         : new OutStream());
 
   Reads reads(in_path, ReadsMode::Read);
   Sequence* s = nullptr;
-  std::string header;
+  std::string header_line;
   std::string seq;
-  std::string qual;
+  std::string qual_line;
   size_t i;
   // Output is to stdout.
   while (true) {
@@ -278,34 +273,29 @@ void parse_decode(const std::string& exe, const std::vector<std::string>& args,
     seq = s->decode();
     delete s;
     // Header
-    if (header_file.is_open()) {
-      getline(header_file, header);
-      output << header << std::endl;
+    if (header != nullptr) {
+      getline(header->get_stream(), header_line);
+      out->get_stream() << header_line << std::endl;
     } else {
-      output << "@" << std::to_string(i) << std::endl;
+      out->get_stream() << "@" << std::to_string(i) << std::endl;
     }
     // Sequence
-    output << seq << std::endl;
+    out->get_stream() << seq << std::endl;
     // +
-    output << "+" << std::endl;
+    out->get_stream() << "+" << std::endl;
     // Quality
-    if (qual_file.is_open()) {
-      getline(qual_file, qual);
-      output << qual << std::endl;
+    if (qual != nullptr) {
+      getline(qual->get_stream(), qual_line);
+      out->get_stream() << qual_line << std::endl;
     } else {
-      output << std::string(seq.length(), '!') << std::endl;
+      out->get_stream() << std::string(seq.length(), '!') << std::endl;
     }
   }
 
-  if (output_file.is_open()) {
-    output_file.close();
-  }
-  if (header_file.is_open()) {
-    header_file.close();
-  }
-  if (qual_file.is_open()) {
-    qual_file.close();
-  }
+  delete in;
+  delete header;
+  delete qual;
+  delete out;
 }
 
 void parse_index(const std::string& exe, const std::vector<std::string>& args,

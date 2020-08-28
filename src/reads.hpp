@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "sequence.hpp"
+#include "stream.hpp"
 
 enum ReadsMode { Read, Write };
 
@@ -19,9 +20,8 @@ class Reads {
   static const uint8_t BASES_BYTES;
 
   /* File object */
-  std::string filename;
   std::fstream file;
-  void open(const std::string& filename, ReadsMode mode);
+  void open(const std::string& path, ReadsMode mode);
 
   /* Index for fast seeking. read_i holds the read index of the NEXT read to
    * read/write .*/
@@ -44,7 +44,8 @@ class Reads {
   static const char EXTENSION[];
   static const char INDEX_EXTENSION[];
 
-  Reads(const std::string& filename, ReadsMode mode);
+  Reads(const std::string& path, ReadsMode mode);
+  Reads(const std::string& path, const std::string& index_path, ReadsMode mode);
   ~Reads();
 
   /* Accessors */
@@ -57,9 +58,9 @@ class Reads {
   Sequence* read_sequence_chunk();
 
   /* Index stuff */
-  void write_index(const std::string& filename);
-  void read_index(const std::string& filename);
-  void read_index(const std::string& filename, size_t n);
+  void write_index(const std::string& path);
+  void read_index(const std::string& path);
+  void read_index(const std::string& path, size_t n);
   void build_index();  // Only in ReadsMode::Read
 
   /* Function to seek to the start of a specific read. */

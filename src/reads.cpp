@@ -4,9 +4,9 @@ const char Reads::EXTENSION[] = "lfq";
 const char Reads::INDEX_EXTENSION[] = "lfqi";
 const uint8_t Reads::BASES_BYTES = 4;
 
-Reads::Reads(const std::string& filename, ReadsMode mode)
-    : filename(filename), index(), read_i(0) {
-  this->open(filename, mode);
+Reads::Reads(const std::string& path, ReadsMode mode)
+    : file(), index(), read_i(0) {
+  this->open(path, mode);
 }
 
 Reads::~Reads() { this->file.close(); }
@@ -17,14 +17,14 @@ size_t Reads::get_pos() { return this->file.tellg(); }
 
 size_t Reads::get_read_i() { return this->read_i; }
 
-void Reads::open(const std::string& filename, ReadsMode mode) {
+void Reads::open(const std::string& path, ReadsMode mode) {
   switch (mode) {
     case ReadsMode::Read:
-      this->file.open(filename, std::fstream::in | std::fstream::binary);
+      this->file.open(path, std::fstream::in | std::fstream::binary);
       break;
     case ReadsMode::Write:
-      this->file.open(filename, std::fstream::out | std::fstream::binary |
-                                    std::fstream::trunc);
+      this->file.open(
+          path, std::fstream::out | std::fstream::binary | std::fstream::trunc);
       break;
     default:
       throw std::runtime_error(std::string("Unknown file mode: ") +
@@ -97,9 +97,9 @@ Sequence* Reads::read_sequence_chunk() {
   return s;
 }
 
-void Reads::write_index(const std::string& filename) {
+void Reads::write_index(const std::string& path) {
   std::ofstream index_file;
-  index_file.open(filename, std::ofstream::trunc);
+  index_file.open(path, std::ofstream::trunc);
   if (index_file.is_open()) {
     for (size_t i = 0; i < this->index.size(); i++) {
       index_file << std::to_string(this->index[i]) << std::endl;
@@ -110,10 +110,10 @@ void Reads::write_index(const std::string& filename) {
   }
 }
 
-void Reads::read_index(const std::string& filename) {
+void Reads::read_index(const std::string& path) {
   std::string line;
   std::ifstream index_file;
-  index_file.open(filename);
+  index_file.open(path);
   if (index_file.is_open()) {
     while (getline(index_file, line)) {
       this->index.push_back(std::stoul(line));
@@ -124,10 +124,10 @@ void Reads::read_index(const std::string& filename) {
   }
 }
 
-void Reads::read_index(const std::string& filename, size_t n) {
+void Reads::read_index(const std::string& path, size_t n) {
   std::string line;
   std::ifstream index_file;
-  index_file.open(filename);
+  index_file.open(path);
   if (index_file.is_open()) {
     for (size_t i = 0; i < n; i++) {
       if (getline(index_file, line)) {

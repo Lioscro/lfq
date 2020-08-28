@@ -16,6 +16,11 @@ if(CMAKE_BUILD_TYPE EQUAL "RELEASE")
 else()
   add_compile_options(-Og)
 endif()
+
+# Boost
+find_package(Boost REQUIRED COMPONENTS iostreams)
+include_directories(${Boost_INCLUDE_DIRS})
+
 add_subdirectory(src)
 if(Test)
   add_subdirectory(tests)

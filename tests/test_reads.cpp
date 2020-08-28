@@ -36,7 +36,7 @@ TEST(ReadsTest, test_read_index) {
 TEST(ReadsTest, test_read_index_with_n) {
   std::string filename("../tests/fixtures/testfile.lfq");
   std::string index_filename("../tests/fixtures/testfile.lfqi");
-  Reads r(filename, Mode::Read);
+  Reads r(filename, ReadsMode::Read);
   r.read_index(index_filename, 1);
   EXPECT_THAT(r.get_index(), ::testing::ElementsAre(0));
 }
