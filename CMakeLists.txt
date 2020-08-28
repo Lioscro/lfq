@@ -10,7 +10,11 @@ endif()
 # Build config
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-Wall -Werror)
+add_compile_options(-Wall)
+# Windows MSVC doesn't support -Werror
+if(NOT MSVC)
+   add_compile_options(-Werror)
+endif()
 if(CMAKE_BUILD_TYPE EQUAL "RELEASE")
   add_compile_options(-O3)
 else()
