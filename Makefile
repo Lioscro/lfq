@@ -12,8 +12,8 @@ build:
 build-windows:
 	mkdir build && \
 	cd build && \
-	cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RELEASE && \
-	make
+	cmake .. -DCMAKE_BUILD_TYPE=RELEASE && \
+	msbuild lfq.sln
 
 compile-release:
 	mkdir -p release/lfq
