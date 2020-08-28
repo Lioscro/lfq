@@ -65,8 +65,8 @@ jobs:
         with:
           python-version: '3.8'
           architecture: x64
-      - name: Setup MSBuild.exe
-        uses: warrenbuckley/Setup-MSBuild@v1
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.1
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Build and run tests
