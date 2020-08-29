@@ -48,7 +48,7 @@ test: build-test
 
 test-windows:
 	cd build \
-	&& tests/tests.exe
+	&& tests/test.exe
 	nosetests --verbose tests.test_lfq
 
 bump-patch:
