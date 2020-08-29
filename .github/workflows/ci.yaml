@@ -85,6 +85,7 @@ jobs:
   test-windows:
     runs-on: windows-2019
     name: Test on Windows
+    needs: build-windows
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
