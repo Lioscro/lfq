@@ -1,0 +1,32 @@
+.PHONY: download-boost download-zlib install-boost install-zlib
+
+download-boost:
+	mkdir -p ext/boost \
+	&& cd ext/boost \
+	&& wget https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz \
+	&& tar -xvf boost_1_69_0.tar.gz --strip 1 \
+	&& rm boost_1_69_0.tar.gz \
+
+download-zlib:
+	mkdir -p ext/zlib \
+	&& cd ext/zlib \
+	&& wget https://www.zlib.net/zlib-1.2.11.tar.gz \
+	&& tar -xvf zlib-1.2.11.tar.gz --strip 1 \
+	&& rm zlib-1.2.11.tar.gz \
+
+install-zlib:
+	cd ext/zlib \
+	&& ./configure --prefix=/usr/src/mxe/usr/x86_64-w64-mingw32.static --static \
+	&& make -j \
+	&& sudo make install
+
+install-boost:
+	cd ext/boost \
+	&& echo "using gcc : : x86_64-w64-mingw32.static-g++ ;" > user-config.jam \
+	&& ./bootstrap.sh \
+	&& sudo ./b2 --user-config=user-config.jam \
+               --target-os=windows \
+               --with-iostreams \
+               --with-regex \
+               --prefix=/usr/src/mxe/usr/x86_64-w64-mingw32.static \
+               install
