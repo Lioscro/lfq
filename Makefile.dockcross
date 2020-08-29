@@ -18,7 +18,8 @@ install-boost:
 	&& rm boost_1_69_0.tar.gz \
 	&& echo "using gcc : : x86_64-w64-mingw32.static-g++ ;" > user-config.jam \
 	&& ./bootstrap.sh \
-	&& sudo ./b2 --user-config=user-config.jam \
+	&& sudo ./b2 link=static \
+	             --user-config=user-config.jam \
                --target-os=windows \
                --with-iostreams \
                --with-regex \
