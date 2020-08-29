@@ -62,13 +62,6 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
-      - name: Setup python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-          architecture: x64
-      - name: Install dependencies
-        run: pip install -r requirements.txt
       - name: Download dockcross image
         run: |
           docker run --rm $DOCKCROSS_IMAGE > ./dockcross
@@ -81,10 +74,31 @@ jobs:
           key: windows-ext
       - name: Download external dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        run: ./dockcross bash -c "make download-zlib && make download-boost"
+        run: ./dockcross bash -c "make download-zlib -f Makefile.dockcross && make download-boost -f Makefile.dockcross"
       - name: Build
         run: ./dockcross bash -c "make install-zlib -f Makefile.dockcross && make install-boost -f Makefile.dockcross && make build-test"
-      - uses: actions/upload-artifact@v2
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v2
         with:
-          name: build
+          name: windows-build
           path: build
+  test-windows:
+    runs-on: windows-2019
+    name: Test on Windows
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@master
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: x64
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Download build artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-build
+          path: build
+      - name: Run tests
+        run: make test-windows

@@ -46,7 +46,7 @@ test: build-test
 	&& tests/test
 	nosetests --verbose tests.test_lfq
 
-test-windows: build-test
+test-windows:
 	cd build \
 	&& tests/tests.exe
 	nosetests --verbose tests.test_lfq
