@@ -27,4 +27,4 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 file(GLOB SOURCES *.hpp *.cpp)
 add_executable(test ${SOURCES})
 add_test(NAME tests COMMAND test)
-target_link_libraries(test PUBLIC gmock gtest lfq_src ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(test PUBLIC gmock gtest lfq_src)
