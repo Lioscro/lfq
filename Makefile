@@ -42,11 +42,13 @@ clean:
 	rm -rf ext
 
 test: build-test
-	tests/test
+	cd build \
+	&& tests/test
 	nosetests --verbose tests.test_lfq
 
 test-windows: build-test
-	tests/tests.exe
+	cd build \
+	&& tests/tests.exe
 	nosetests --verbose tests.test_lfq
 
 bump-patch:
