@@ -10,12 +10,7 @@ endif()
 ################# Build config.
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Windows MSVC doesn't support some -W options.
-if(NOT MSVC)
-   add_compile_options(-Wall -Werror -fvisibility=hidden)
-endif()
-
+add_compile_options(-Wall -Werror -fvisibility=hidden)
 # Build statically linked executable for relase.
 if(CMAKE_BUILD_TYPE EQUAL "RELEASE")
   set(BUILD_SHARED_LIBS OFF)

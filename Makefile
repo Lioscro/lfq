@@ -1,18 +1,18 @@
-.PHONY: build build-windows check clean compile-release compile-release-windows test test-windows bump-patch bump-minor bump-major push-release
+.PHONY: build build-test check clean compile-release compile-release-windows test test-windows bump-patch bump-minor bump-major push-release
 
 RELEASE_OS ?= local
 RELEASE_VERSION ?= local
 
 build:
+	mkdir -p build \
+	&& cd build \
+	&& cmake .. -DCMAKE_BUILD_TYPE=RELEASE \
+	&& make
+
+build-test:
 	mkdir -p build && \
 	cd build && \
-	cmake .. -DCMAKE_BUILD_TYPE=RELEASE && \
-	make
-
-build-windows:
-	mkdir build && \
-	cd build && \
-	cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RELEASE && \
+	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
 	make
 
 compile-release:
@@ -21,8 +21,8 @@ compile-release:
 	cp -rf tests/fixtures/fastq/example.fastq release/lfq/
 	cp -rf LICENSE release/lfq/
 	cp -rf README.md release/lfq/
-	cd release && \
-	tar -czvf lfq_${RELEASE_OS}-${RELEASE_VERSION}.tar.gz lfq
+	cd release \
+	&& tar -czvf lfq_${RELEASE_OS}-${RELEASE_VERSION}.tar.gz lfq
 
 compile-release-windows:
 	mkdir -p release/lfq
@@ -39,21 +39,14 @@ check:
 clean:
 	rm -rf build
 	rm -rf release
+	rm -rf ext
 
-test:
-	mkdir -p build && \
-	cd build && \
-	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
-	make && \
+test: build-test
 	tests/test
 	nosetests --verbose tests.test_lfq
 
-test-windows:
-	mkdir build && \
-	cd build && \
-	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
-	msbuild.exe lfq.sln /p:WarningLevel=0 && \
-	tests/test.exe
+test-windows: build-test
+	tests/tests.exe
 	nosetests --verbose tests.test_lfq
 
 bump-patch:
