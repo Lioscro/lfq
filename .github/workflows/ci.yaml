@@ -54,9 +54,9 @@ jobs:
           pip install -r requirements.txt
       - name: Build and run tests
         run: make test
-  test-windows:
-    runs-on: windows-2019
-    name: Test on Windows
+  build-windows:
+    runs-on: ubuntu-20.04
+    name: Build Windows executable
     env:
       DOCKCROSS_IMAGE: dockcross/windows-static-x64:20200609-7fa7213
     steps:
@@ -70,7 +70,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Download dockcross image
-        shell: bash
         run: |
           docker run --rm $DOCKCROSS_IMAGE > ./dockcross
           chmod +x ./dockcross
@@ -79,13 +78,13 @@ jobs:
         id: cache
         with:
           path: ext
-          key: ext
+          key: windows-ext
       - name: Download external dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
         run: ./dockcross bash -c "make download-zlib && make download-boost"
-      - name: Build and test
-        shell: bash
-        run: |
-          ./dockcross bash -c "make install-zlib -f Makefile.dockcross && make install-boost -f Makefile.dockcross && make build-test"
-          make test-windows
+      - name: Build
+        run: ./dockcross bash -c "make install-zlib -f Makefile.dockcross && make install-boost -f Makefile.dockcross && make build-test"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build
