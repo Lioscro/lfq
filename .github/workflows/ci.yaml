@@ -37,6 +37,11 @@ jobs:
           pip install -r requirements.txt
       - name: Build and run tests
         run: make test
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: linux-build
+          path: build
   test-macos:
     runs-on: macos-10.15
     name: Test on MacOS
@@ -56,6 +61,11 @@ jobs:
           pip install -r requirements.txt
       - name: Build and run tests
         run: make test
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos-build
+          path: build
   build-windows:
     runs-on: ubuntu-20.04
     name: Build Windows executable
