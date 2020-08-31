@@ -37,6 +37,7 @@ jobs:
     runs-on: macos-latest
     env:
       RELEASE_OS: mac
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       - name: Checkout branch
         uses: actions/checkout@master

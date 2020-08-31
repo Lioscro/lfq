@@ -40,6 +40,8 @@ jobs:
   test-macos:
     runs-on: macos-10.15
     name: Test on MacOS
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
