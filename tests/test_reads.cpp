@@ -33,6 +33,14 @@ TEST(ReadsTest, test_read_index) {
   EXPECT_THAT(r.get_index(), ::testing::ElementsAre(0, 7));
 }
 
+TEST(ReadsTest, test_read_index_gzip) {
+  std::string filename("../tests/fixtures/testfile.lfq");
+  std::string index_filename("../tests/fixtures/testfile.lfqi.gz");
+  Reads r(filename, ReadsMode::Read);
+  r.read_index(index_filename);
+  EXPECT_THAT(r.get_index(), ::testing::ElementsAre(0, 7));
+}
+
 TEST(ReadsTest, test_read_index_with_n) {
   std::string filename("../tests/fixtures/testfile.lfq");
   std::string index_filename("../tests/fixtures/testfile.lfqi");
