@@ -98,47 +98,30 @@ Sequence* Reads::read_sequence_chunk() {
 }
 
 void Reads::write_index(const std::string& path) {
-  std::ofstream index_file;
-  index_file.open(path, std::ofstream::trunc);
-  if (index_file.is_open()) {
-    for (size_t i = 0; i < this->index.size(); i++) {
-      index_file << std::to_string(this->index[i]) << std::endl;
-    }
-    index_file.close();
-  } else {
-    throw std::runtime_error("Failed to open index");
+  OutStream stream(
+      path, is_gzip_extension(path) ? StreamType::Gzip : StreamType::Plain);
+  for (size_t i = 0; i < this->index.size(); i++) {
+    stream.get_stream() << std::to_string(this->index[i]) << std::endl;
   }
 }
 
 void Reads::read_index(const std::string& path) {
   std::string line;
-  std::ifstream index_file;
-  index_file.open(path);
-  if (index_file.is_open()) {
-    while (getline(index_file, line)) {
-      this->index.push_back(std::stoul(line));
-    }
-    index_file.close();
-  } else {
-    throw std::runtime_error("Failed to open index");
+  InStream stream(path);
+  while (getline(stream.get_stream(), line)) {
+    this->index.push_back(std::stoul(line));
   }
 }
 
 void Reads::read_index(const std::string& path, size_t n) {
   std::string line;
-  std::ifstream index_file;
-  index_file.open(path);
-  if (index_file.is_open()) {
-    for (size_t i = 0; i < n; i++) {
-      if (getline(index_file, line)) {
-        this->index.push_back(std::stoul(line));
-      } else {
-        throw std::runtime_error("Reached end of index");
-      }
+  InStream stream(path);
+  for (size_t i = 0; i < n; i++) {
+    if (getline(stream.get_stream(), line)) {
+      this->index.push_back(std::stoul(line));
+    } else {
+      throw std::runtime_error("Reached end of index");
     }
-    index_file.close();
-  } else {
-    throw std::runtime_error("Failed to open index");
   }
 }
 

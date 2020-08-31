@@ -185,6 +185,10 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
   std::string header_path(opts.find('h') != opts.end() ? opts.at('h') : "");
   std::string qual_path(opts.find('q') != opts.end() ? opts.at('q') : "");
 
+  if (is_gzip_extension(out_path)) {
+    throw std::runtime_error("Output LFQ file can not be gzippped");
+  }
+
   // Actual stream objects for reading/writing
   InStream* in = (in_path == "-") ? new InStream() : new InStream(in_path);
   OutStream* header =
