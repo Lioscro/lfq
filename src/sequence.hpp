@@ -1,5 +1,6 @@
 #ifndef SRC_SEQUENCE_HPP_
 #define SRC_SEQUENCE_HPP_
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
@@ -42,8 +43,10 @@ class Sequence {
   static const uint8_t PAIR_GB;
 
   /* The actual encoded sequence & number of (encoded) bases */
-  std::vector<uint8_t> sequence;
+  uint8_t* sequence;
   size_t n_bases;
+  size_t n_blocks;
+  size_t vector_size;
 
   /* Static methods to convert a char to its encoding and vice-versa. */
   static uint8_t pair_to_encoding(const char c1, const char c2);
@@ -55,12 +58,13 @@ class Sequence {
   static const size_t TYPE_SIZE;
 
   /* Constructors. */
-  Sequence();
+  explicit Sequence(size_t n_bases);
   Sequence(const std::vector<uint8_t>& sequence, size_t n_bases);
-  Sequence(const uint8_t* sequence, size_t size, size_t n_bases);
+  Sequence(uint8_t* sequence, size_t n_bases);
+  ~Sequence();
 
   /* Accessors */
-  const std::vector<uint8_t>& get_sequence() const;
+  const uint8_t* get_sequence() const;
   size_t get_n_bases() const;
   static size_t get_type_size();
 

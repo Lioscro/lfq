@@ -16,11 +16,12 @@ jobs:
       - name: Setup environment
         id: setup
         run: echo ::set-output name=RELEASE_VERSION::${GITHUB_REF##*/}
-      - name: Build
+      - name: Install dependencies
+        run: sudo apt-get install zlib1g-dev libboost-all-dev
+      - name: Build and compile release
         run: |
-          docker run --rm dockbuild/centos5:latest > ./dockbuild
-          chmod +x ./dockbuild
-          ./dockbuild -a "-e RELEASE_OS=$RELEASE_OS -e RELEASE_VERSION=$RELEASE_VERSION" bash -c "make build && make compile-release"
+          make build
+          make compile-release
         env:
           RELEASE_VERSION: ${{ steps.setup.outputs.RELEASE_VERSION }}
       - name: Upload to release
@@ -36,15 +37,18 @@ jobs:
     runs-on: macos-latest
     env:
       RELEASE_OS: mac
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
       - name: Setup environment
         id: setup
         run: echo ::set-output name=RELEASE_VERSION::${GITHUB_REF##*/}
+      - name: Install dependencies
+        run: brew install boost
       - name: Build and compile release
         run: |
-          make
+          make build
           make compile-release
         env:
           RELEASE_VERSION: ${{ steps.setup.outputs.RELEASE_VERSION }}
@@ -61,6 +65,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       RELEASE_OS: windows
+      DOCKCROSS_IMAGE: dockcross/windows-static-x64:20200609-7fa7213
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
@@ -69,9 +74,9 @@ jobs:
         run: echo ::set-output name=RELEASE_VERSION::${GITHUB_REF##*/}
       - name: Build
         run: |
-          docker run --rm dockcross/windows-static-x64:20191127-92bdbca > ./dockcross
+          docker run --rm $DOCKCROSS_IMAGE > ./dockcross
           chmod +x ./dockcross
-          ./dockcross -a "-e RELEASE_OS=$RELEASE_OS -e RELEASE_VERSION=$RELEASE_VERSION" bash -c "make build && make compile-release-windows"
+          ./dockcross -a "-e RELEASE_OS=$RELEASE_OS -e RELEASE_VERSION=$RELEASE_VERSION" bash -c "make install-zlib -f Makefile.dockcross && make install-boost -f Makefile.dockcross && make build && make compile-release-windows"
         env:
           RELEASE_VERSION: ${{ steps.setup.outputs.RELEASE_VERSION }}
       - name: Upload to release

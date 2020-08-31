@@ -6,6 +6,7 @@
 
 #include "reads.hpp"
 #include "sequence.hpp"
+#include "stream.hpp"
 
 static const char VERSION[] = "0.0.3";
 
@@ -88,18 +89,24 @@ void print_index_usage(const std::string& exe) {
 
 void print_view_usage(const std::string& exe) {
   print_version(exe);
-  std::cerr << "View read(s) in a LFQ file" << std::endl
-            << std::endl
-            << "Usage: " << exe << " view [options] lfq-file" << std::endl
-            << std::endl
-            << "Positional arguments:" << std::endl
-            << "lfq-file        Input LFQ file." << std::endl
-            << std::endl
-            << "Options:" << std::endl
-            << "-n, --num       (required) Which read to extract" << std::endl
-            << "-i, --index     Index file. Recommended for fast lookup"
-            << std::endl
-            << std::endl;
+  std::cerr
+      << "View read(s) in a LFQ file" << std::endl
+      << std::endl
+      << "Usage: " << exe << " view [options] lfq-file" << std::endl
+      << std::endl
+      << "Positional arguments:" << std::endl
+      << "lfq-file        Input LFQ file." << std::endl
+      << std::endl
+      << "Options:" << std::endl
+      << "-r, --range     (required) Range of reads to extract, in the format "
+      << std::endl
+      << "                'start:end' which prints reads at indices [start, "
+         "end)."
+      << std::endl
+      << "                Provide an integer to view a single read."
+      << std::endl
+      << "-i, --index     Index file. Recommended for fast lookup" << std::endl
+      << std::endl;
   exit(1);
 }
 
@@ -170,37 +177,42 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
     std::cerr << "Error: missing output file" << std::endl;
     print_encode_usage(exe);
   }
+
+  // Paths as strings
   std::string in_path(args[0]);
   std::string out_path(opts.at('o'));
-  std::string index_path("");
-  std::ofstream qual_file;
-  std::ofstream header_file;
-  if (opts.find('i') != opts.end()) {
-    index_path = opts.at('i');
-  }
-  if (opts.find('h') != opts.end()) {
-    header_file.open(opts.at('h'), std::ofstream::trunc);
-  }
-  if (opts.find('q') != opts.end()) {
-    qual_file.open(opts.at('q'), std::ofstream::trunc);
-  }
+  std::string index_path(opts.find('i') != opts.end() ? opts.at('i') : "");
+  std::string header_path(opts.find('h') != opts.end() ? opts.at('h') : "");
+  std::string qual_path(opts.find('q') != opts.end() ? opts.at('q') : "");
 
-  std::ifstream input_file;
-  std::istream& input = (in_path == "-") ? std::cin : input_file;
-  if (in_path != "-") {
-    input_file.open(in_path);
-  }
-
-  Reads reads(out_path, Mode::Write);
+  // Actual stream objects for reading/writing
+  InStream* in = (in_path == "-") ? new InStream() : new InStream(in_path);
+  OutStream* header =
+      (!header_path.empty()
+           ? new OutStream(header_path, is_gzip_extension(header_path)
+                                            ? StreamType::Gzip
+                                            : StreamType::Plain)
+           : nullptr);
+  OutStream* qual = (!qual_path.empty()
+                         ? new OutStream(qual_path, is_gzip_extension(qual_path)
+                                                        ? StreamType::Gzip
+                                                        : StreamType::Plain)
+                         : nullptr);
+  Reads reads(out_path, ReadsMode::Write);
   Sequence* s = nullptr;
   std::string line;
   // Input FASTQ is a stream from stdin.
-  for (size_t i = 0; getline(input, line); i++) {
+  for (size_t i = 0; getline(in->get_stream(), line); i++) {
+    // Windows files have \r\n as a new line (and thus contain the \r char).
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+
     switch (i % 4) {
       // Header
       case 0:
-        if (header_file.is_open()) {
-          header_file << line << std::endl;
+        if (header != nullptr) {
+          header->get_stream() << line << std::endl;
         }
         break;
       // Sequence
@@ -211,8 +223,8 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
         break;
       // Quality
       case 3:
-        if (qual_file.is_open()) {
-          qual_file << line << std::endl;
+        if (qual != nullptr) {
+          qual->get_stream() << line << std::endl;
         }
         break;
     }
@@ -221,15 +233,9 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
   if (!index_path.empty()) {
     reads.write_index(index_path);
   }
-  if (input_file.is_open()) {
-    input_file.close();
-  }
-  if (header_file.is_open()) {
-    header_file.close();
-  }
-  if (qual_file.is_open()) {
-    qual_file.close();
-  }
+  delete in;
+  delete header;
+  delete qual;
 }
 
 void parse_decode(const std::string& exe, const std::vector<std::string>& args,
@@ -239,31 +245,28 @@ void parse_decode(const std::string& exe, const std::vector<std::string>& args,
     std::cerr << "Error: missing input file" << std::endl;
     print_encode_usage(exe);
   }
+
+  // Paths as strings
   std::string in_path(args[0]);
-  std::string out_path("");
-  std::ifstream qual_file;
-  std::ifstream header_file;
-  if (opts.find('o') != opts.end()) {
-    out_path = opts.at('o');
-  }
-  if (opts.find('h') != opts.end()) {
-    header_file.open(opts.at('h'));
-  }
-  if (opts.find('q') != opts.end()) {
-    qual_file.open(opts.at('q'));
-  }
+  std::string out_path(opts.find('o') != opts.end() ? opts.at('o') : "");
+  std::string header_path(opts.find('h') != opts.end() ? opts.at('h') : "");
+  std::string qual_path(opts.find('q') != opts.end() ? opts.at('q') : "");
 
-  std::ofstream output_file;
-  std::ostream& output = (out_path.empty()) ? std::cout : output_file;
-  if (!out_path.empty()) {
-    output_file.open(out_path, std::ofstream::trunc);
-  }
+  // Actual stream objects for reading/writing
+  InStream* in = new InStream(in_path);
+  InStream* header = !header_path.empty() ? new InStream(header_path) : nullptr;
+  InStream* qual = !qual_path.empty() ? new InStream(qual_path) : nullptr;
+  OutStream* out =
+      (!out_path.empty() ? new OutStream(out_path, is_gzip_extension(out_path)
+                                                       ? StreamType::Gzip
+                                                       : StreamType::Plain)
+                         : new OutStream());
 
-  Reads reads(in_path, Mode::Read);
+  Reads reads(in_path, ReadsMode::Read);
   Sequence* s = nullptr;
-  std::string header;
+  std::string header_line;
   std::string seq;
-  std::string qual;
+  std::string qual_line;
   size_t i;
   // Output is to stdout.
   while (true) {
@@ -275,34 +278,29 @@ void parse_decode(const std::string& exe, const std::vector<std::string>& args,
     seq = s->decode();
     delete s;
     // Header
-    if (header_file.is_open()) {
-      getline(header_file, header);
-      output << header << std::endl;
+    if (header != nullptr) {
+      getline(header->get_stream(), header_line);
+      out->get_stream() << header_line << std::endl;
     } else {
-      output << "@" << std::to_string(i) << std::endl;
+      out->get_stream() << "@" << std::to_string(i) << std::endl;
     }
     // Sequence
-    output << seq << std::endl;
+    out->get_stream() << seq << std::endl;
     // +
-    output << "+" << std::endl;
+    out->get_stream() << "+" << std::endl;
     // Quality
-    if (qual_file.is_open()) {
-      getline(qual_file, qual);
-      output << qual << std::endl;
+    if (qual != nullptr) {
+      getline(qual->get_stream(), qual_line);
+      out->get_stream() << qual_line << std::endl;
     } else {
-      output << std::string(seq.length(), '!') << std::endl;
+      out->get_stream() << std::string(seq.length(), '!') << std::endl;
     }
   }
 
-  if (output_file.is_open()) {
-    output_file.close();
-  }
-  if (header_file.is_open()) {
-    header_file.close();
-  }
-  if (qual_file.is_open()) {
-    qual_file.close();
-  }
+  delete in;
+  delete header;
+  delete qual;
+  delete out;
 }
 
 void parse_index(const std::string& exe, const std::vector<std::string>& args,
@@ -319,7 +317,7 @@ void parse_index(const std::string& exe, const std::vector<std::string>& args,
   }
   std::string in_path(args[0]);
   std::string out_path(opts.at('o'));
-  Reads reads(in_path, Mode::Read);
+  Reads reads(in_path, ReadsMode::Read);
   reads.build_index();
   reads.write_index(out_path);
 }
@@ -329,27 +327,42 @@ void parse_view(const std::string& exe, const std::vector<std::string>& args,
   // There must be exactly one argument specifying the input LFQ.
   if (args.size() != 1) {
     std::cerr << "Error: missing input file" << std::endl;
-    print_encode_usage(exe);
+    print_view_usage(exe);
   }
   // n option must be provided.
-  if (opts.find('n') == opts.end() || opts.at('n').empty()) {
-    std::cerr << "Error: missing read number" << std::endl;
-    print_encode_usage(exe);
+  if (opts.find('r') == opts.end() || opts.at('r').empty()) {
+    std::cerr << "Error: missing read range" << std::endl;
+    print_view_usage(exe);
   }
   std::string in_path(args[0]);
-  size_t n = stoul(opts.at('n'));
+  std::string range(opts.at('r'));
+  std::vector<size_t> indices;
   std::string index_path("");
   if (opts.find('i') != opts.end()) {
     index_path = opts.at('i');
   }
-  Reads reads(in_path, Mode::Read);
-  if (!index_path.empty()) {
-    reads.read_index(index_path);
+
+  size_t colon_pos = range.find(':');
+  if (colon_pos != std::string::npos) {
+    size_t start = stoul(range.substr(0, colon_pos));
+    size_t end =
+        stoul(range.substr(colon_pos + 1, range.length() - colon_pos - 1));
+    for (size_t i = start; i < end; i++) {
+      indices.push_back(i);
+    }
+  } else {
+    indices.push_back(stoul(range));
   }
-  reads.seek(n);
-  Sequence* s = reads.read_sequence_chunk();
-  std::cout << s->decode() << std::endl;
-  delete s;
+  Reads reads(in_path, ReadsMode::Read);
+  if (!index_path.empty()) {
+    reads.read_index(index_path, indices[0]);
+  }
+  reads.seek(indices[0]);
+  for (size_t i = 0; i < indices.size(); i++) {
+    Sequence* s = reads.read_sequence_chunk();
+    std::cout << s->decode() << std::endl;
+    delete s;
+  }
 }
 
 int main(int argc, char* argv[]) {

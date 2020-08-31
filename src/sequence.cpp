@@ -35,31 +35,35 @@ const uint8_t Sequence::PAIR_TB = 0x11;
 const uint8_t Sequence::PAIR_CB = 0x0f;
 const uint8_t Sequence::PAIR_GB = 0x10;
 
-Sequence::Sequence() : sequence() {}
+Sequence::Sequence(size_t n_bases) : n_bases(n_bases) {
+  this->n_blocks = this->get_n_blocks(n_bases);
+  this->vector_size = this->get_vector_size(this->n_blocks);
+  this->sequence = new uint8_t[this->vector_size]();
+}
 
 Sequence::Sequence(const std::vector<uint8_t>& sequence, size_t n_bases)
-    : sequence(sequence.begin(), sequence.end()), n_bases(n_bases) {}
-
-Sequence::Sequence(const uint8_t* sequence, size_t size, size_t n_bases)
-    : sequence(sequence, sequence + size), n_bases(n_bases) {}
-
-const std::vector<uint8_t>& Sequence::get_sequence() const {
-  return this->sequence;
+    : Sequence::Sequence(n_bases) {
+  std::copy(&sequence[0], &sequence[this->vector_size], this->sequence);
 }
+
+Sequence::Sequence(uint8_t* sequence, size_t n_bases)
+    : Sequence::Sequence(n_bases) {
+  std::copy(sequence, sequence + this->vector_size, this->sequence);
+}
+
+Sequence::~Sequence() { delete[] this->sequence; }
+
+const uint8_t* Sequence::get_sequence() const { return this->sequence; }
 
 size_t Sequence::get_n_bases() const { return this->n_bases; }
 
-size_t Sequence::get_n_blocks() const {
-  return this->get_n_blocks(this->n_bases);
-}
+size_t Sequence::get_n_blocks() const { return this->n_blocks; }
 
 size_t Sequence::get_n_blocks(size_t n_bases) {
   return (n_bases / 2) + (n_bases % 2);
 }
 
-size_t Sequence::get_vector_size() const {
-  return this->get_vector_size(this->get_n_blocks());
-}
+size_t Sequence::get_vector_size() const { return this->vector_size; }
 
 size_t Sequence::get_vector_size(size_t n_blocks) {
   return ceil(static_cast<float>(n_blocks * Sequence::BLOCK_SIZE) /
@@ -327,16 +331,12 @@ Sequence* Sequence::encode(const char* str, size_t n_bases) {
   int8_t overflow = 0;
   size_t bit_i = 0;
   size_t vector_i = 0;
-  Sequence* s = new Sequence();
-  size_t n_blocks = s->get_n_blocks(n_bases);
-  size_t vector_size = s->get_vector_size(n_blocks);
+  Sequence* s = new Sequence(n_bases);
   char c1;
   char c2;
 
-  s->n_bases = n_bases;
-  s->sequence.reserve(vector_size);
-
-  for (size_t i = 0; i < n_blocks; i++) {
+  s->sequence = new uint8_t[s->vector_size]();
+  for (size_t i = 0; i < s->n_blocks; i++) {
     bit_i = i * s->BLOCK_SIZE;
     vector_i = bit_i / s->TYPE_SIZE;
 
@@ -349,7 +349,7 @@ Sequence* Sequence::encode(const char* str, size_t n_bases) {
     if (overflow >= 0) {
       // The encoding needs to span two vector elements.
       block += base >> overflow;
-      s->sequence.push_back(block);
+      s->sequence[vector_i] = block;
       block = base << (s->TYPE_SIZE - overflow);
     } else {
       // The encoding is within one vector element.
@@ -357,7 +357,7 @@ Sequence* Sequence::encode(const char* str, size_t n_bases) {
     }
   }
   if ((bit_i + s->BLOCK_SIZE) % (s->TYPE_SIZE) != 0) {
-    s->sequence.push_back(block);
+    s->sequence[s->vector_size - 1] = block;
   }
   return s;
 }
@@ -367,11 +367,10 @@ std::string Sequence::decode() const {
   int8_t overflow = 0;
   size_t bit_i = 0;
   size_t vector_i = 0;
-  size_t n_blocks = this->get_n_blocks();
   char* decoded = new char[this->n_bases]();
   char* pair = nullptr;
 
-  for (size_t i = 0; i < n_blocks; i++) {
+  for (size_t i = 0; i < this->n_blocks; i++) {
     bit_i = i * this->BLOCK_SIZE;
     vector_i = bit_i / Sequence::TYPE_SIZE;
 
@@ -397,7 +396,7 @@ std::string Sequence::decode() const {
 }
 
 size_t Sequence::get_chunk_size(uint8_t n_bases_bytes) const {
-  return n_bases_bytes + this->sequence.size();
+  return n_bases_bytes + this->vector_size;
 }
 
 uint8_t* Sequence::to_chunk(uint8_t n_bases_bytes) const {
@@ -417,7 +416,7 @@ uint8_t* Sequence::to_chunk(uint8_t n_bases_bytes) const {
         (this->n_bases >> (this->TYPE_SIZE * (n_bases_bytes - i - 1))) & 0xff;
   }
   // Fill the rest
-  for (size_t i = 0; i < this->sequence.size(); i++) {
+  for (size_t i = 0; i < this->vector_size; i++) {
     chunk[i + n_bases_bytes] = this->sequence[i];
   }
   return chunk;

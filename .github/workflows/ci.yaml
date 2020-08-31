@@ -32,12 +32,16 @@ jobs:
           python-version: '3.8'
           architecture: x64
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          sudo apt-get install zlib1g-dev libboost-all-dev
+          pip install -r requirements.txt
       - name: Build and run tests
         run: make test
   test-macos:
     runs-on: macos-10.15
     name: Test on MacOS
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
@@ -47,12 +51,34 @@ jobs:
           python-version: '3.8'
           architecture: x64
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          brew install boost
+          pip install -r requirements.txt
       - name: Build and run tests
         run: make test
+  build-windows:
+    runs-on: ubuntu-20.04
+    name: Build Windows executable
+    env:
+      DOCKCROSS_IMAGE: dockcross/windows-static-x64:20200609-7fa7213
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@master
+      - name: Download dockcross image
+        run: |
+          docker run --rm $DOCKCROSS_IMAGE > ./dockcross
+          chmod +x ./dockcross
+      - name: Build
+        run: ./dockcross bash -c "make install-zlib -f Makefile.dockcross && make install-boost -f Makefile.dockcross && make build-test"
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-build
+          path: build
   test-windows:
     runs-on: windows-2019
     name: Test on Windows
+    needs: build-windows
     steps:
       - name: Checkout branch
         uses: actions/checkout@master
@@ -63,35 +89,10 @@ jobs:
           architecture: x64
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Build and run tests
+      - name: Download build artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-build
+          path: build
+      - name: Run tests
         run: make test-windows
-  # test-linux:
-  #   runs-on: ubuntu-20.04
-  #   name: Test on Linux
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@master
-  #     - name: Build and run tests
-  #       run: |
-  #         docker run --rm dockbuild/centos5:latest > ./dockbuild
-  #         chmod +x ./dockbuild
-  #         ./dockbuild bash -c "make test"
-  # test-macos:
-  #   runs-on: macos-10.15
-  #   name: Test on MacOS
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@master
-  #     - name: Build and run tests
-  #       run: make test
-  # test-windows:
-  #   runs-on: ubuntu-20.04
-  #   name: Test on Windows
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@master
-  #     - name: Build and run tests
-  #       run: |
-  #         docker run --rm dockcross/windows-static-x64:20200609-7fa7213 > ./dockcross
-  #         chmod +x ./dockcross
-  #         ./dockcross bash -c "sudo ln -s /usr/bin/make /usr/bin/gmake && make test"
