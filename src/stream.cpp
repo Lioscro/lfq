@@ -14,6 +14,14 @@ bool is_gzip_extension(const std::string& path) {
   return boost::ends_with(path, ".gz");
 }
 
+std::istream& getline(std::istream& is, std::string& str) {  // NOLINT
+  std::getline(is, str);
+  if (!str.empty() && str.back() == '\r') {
+    str.pop_back();
+  }
+  return is;
+}
+
 InStream::InStream() : stream(&std::cin), type(StreamType::Std) {}
 
 InStream::InStream(const std::string& path) {

@@ -11,6 +11,7 @@
 
 bool is_gzip(const std::string& path);
 bool is_gzip_extension(const std::string& path);
+std::istream& getline(std::istream& is, std::string& str);  // NOLINT
 
 enum StreamType { Std, Plain, Gzip };
 
