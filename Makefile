@@ -6,13 +6,13 @@ RELEASE_VERSION ?= local
 build:
 	mkdir -p build \
 	&& cd build \
-	&& cmake .. -DCMAKE_BUILD_TYPE=RELEASE \
+	&& cmake .. -DCMAKE_BUILD_TYPE=Release \
 	&& make
 
 build-test:
 	mkdir -p build && \
 	cd build && \
-	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=DEBUG && \
+	cmake .. -DTest=ON -DCMAKE_BUILD_TYPE=Debug && \
 	make
 
 compile-release:

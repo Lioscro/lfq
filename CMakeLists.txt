@@ -4,20 +4,23 @@ project (lfq)
 ################# Build options
 option(Test "Test" OFF)
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "RELEASE")
-endif()
+  set(CMAKE_BUILD_TYPE Release)
+endif(NOT CMAKE_BUILD_TYPE)
 
 ################# Build config.
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Werror -fvisibility=hidden)
-# Build statically linked executable for relase.
-if(CMAKE_BUILD_TYPE EQUAL "RELEASE")
+# Statically link for release
+if(CMAKE_BUILD_TYPE MATCHES Release)
   set(BUILD_SHARED_LIBS OFF)
   set(Boost_USE_STATIC_LIBS ON)
   if(UNIX AND NOT APPLE)
+    # By default, Linux searches for shared object files (.so) first, but
+    # we want static.
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
     set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
-  endif()
+  endif(UNIX AND NOT APPLE)
   add_compile_options(-O3)
 endif()
 

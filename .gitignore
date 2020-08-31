@@ -13,6 +13,7 @@ build
 release
 ext
 __pycache__
+*.pyc
 .DS_Store
 dockcross
 dockbuild
