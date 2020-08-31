@@ -203,6 +203,11 @@ void parse_encode(const std::string& exe, const std::vector<std::string>& args,
   std::string line;
   // Input FASTQ is a stream from stdin.
   for (size_t i = 0; getline(in->get_stream(), line); i++) {
+    // Windows files have \r\n as a new line (and thus contain the \r char).
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+
     switch (i % 4) {
       // Header
       case 0:
