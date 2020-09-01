@@ -1,4 +1,9 @@
 # lfq
+![github version](https://img.shields.io/badge/Version-0.0.4-informational)
+![license](https://img.shields.io/github/license/lioscro/lfq)
+![CI](https://github.com/Lioscro/lfq/workflows/CI/badge.svg)
+
+Lossless compression of FASTQ sequences.
 
 ```
 lfq 0.0.4
